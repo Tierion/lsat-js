@@ -160,7 +160,7 @@ export function hasCaveat(
 export function verifyCaveats(
   caveats: Caveat[],
   satisfiers: Satisfier | Satisfier[],
-  options?: any
+  options = {}
 ): boolean {
   assert(satisfiers, 'Must have satisfiers in order to verify caveats')
 
@@ -226,7 +226,7 @@ export function verifyFirstPartyMacaroon(
   macaroon: MacaroonClass,
   secret: string,
   satisfiers?: Satisfier | Satisfier[],
-  options = {}
+  options: any = {}
 ): boolean {
   const verifier = new MacaroonsVerifier(macaroon)
 

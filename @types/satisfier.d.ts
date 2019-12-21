@@ -11,7 +11,7 @@ import { Caveat } from '../src/caveat'
 export type SatisfyPrevious = (
   prev: Caveat,
   curr: Caveat,
-  options?: object
+  options?: any
 ) => boolean
 
 /**
@@ -21,7 +21,7 @@ export type SatisfyPrevious = (
  * @param {Object} options - optional object to be used to make evaluation, e.g. a request object in a server
  * @returns boolean
  */
-export type SatisfyFinal = (caveat: Caveat, options?: object) => boolean
+export type SatisfyFinal = (caveat: Caveat, options?: any) => boolean
 
 /**
  * @typedef {Object} Satisfier

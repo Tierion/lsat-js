@@ -3,6 +3,7 @@ import { MacaroonsBuilder } from 'macaroons.js'
 
 import { Caveat, ErrInvalidCaveat, hasCaveat, verifyCaveats } from '../src'
 import { Satisfier } from '../@types'
+import { verify } from 'crypto'
 
 describe('Caveats', () => {
   describe('Caveat', () => {
@@ -141,6 +142,32 @@ describe('Caveats', () => {
 
       expect(invalidateFinal()).to.be.false
       expect(invalidatePrev()).to.be.false
+    })
+
+    it('should be able to use an options object for verification', () => {
+      const testCaveat = new Caveat({condition: 'middlename', value: 'danger'})
+      caveats.push(testCaveat)
+      satisfier = {
+        condition: testCaveat.condition,
+        // dummy satisfyPrevious function to test that it tests caveat lists correctly
+        satisfyPrevious: (prev, cur, options): boolean =>
+          prev.value.toString().includes('test') &&
+          cur.value.toString().includes('test') && options.body.middlename === testCaveat.value,
+        satisfyFinal: (caveat, options): boolean => {
+          if (caveat.condition === testCaveat.condition && options?.body.middlename === testCaveat.value) 
+            return true
+          
+          return false
+        },
+      }
+
+      let isValid = verifyCaveats(caveats, satisfier, {body: { middlename: 'bob' }})
+      
+      expect(isValid, 'should fail when given an invalid options object').to.be.false
+      
+      isValid = verifyCaveats(caveats, satisfier, {body: { middlename: testCaveat.value }})
+
+      expect(isValid, 'should pass when given a valid options object').to.be.true
     })
   })
 })
