@@ -3,7 +3,6 @@ import { MacaroonsBuilder } from 'macaroons.js'
 
 import { Caveat, ErrInvalidCaveat, hasCaveat, verifyCaveats } from '../src'
 import { Satisfier } from '../@types'
-import { verify } from 'crypto'
 
 describe('Caveats', () => {
   describe('Caveat', () => {
