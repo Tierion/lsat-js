@@ -1,5 +1,5 @@
 declare module 'bsert'
 declare module 'bufio'
-declare module 'macaroons.js'
 declare module 'ln-service'
 declare module 'bsert'
+declare module 'macaroons.js'

@@ -2,13 +2,11 @@ import assert from 'assert'
 import crypto from 'crypto'
 import { Struct } from 'bufio'
 import { parsePaymentRequest } from 'ln-service'
-import { MacaroonsBuilder, Macaroon } from 'macaroons.js'
+import { MacaroonsBuilder } from 'macaroons.js'
 
 import { Caveat, Identifier } from '.'
-import { LsatOptions } from '../@types'
+import { LsatOptions, MacaroonInterface } from './types'
 import { isHex } from './helpers'
-
-class MacaroonInterface extends Macaroon {}
 
 /**
  * @description A a class for creating and converting LSATs

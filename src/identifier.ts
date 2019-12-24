@@ -3,7 +3,7 @@ import { Struct } from 'bufio'
 import crypto from 'crypto'
 import uuidv4 from 'uuid/v4'
 
-import { IdentifierOptions } from '../@types'
+import { IdentifierOptions } from './types'
 
 export const LATEST_VERSION = 0
 export const TOKEN_ID_SIZE = 32

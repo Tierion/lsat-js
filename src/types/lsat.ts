@@ -1,5 +1,3 @@
-import { Macaroon, CaveatPacket } from 'macaroons.js'
-
 /**
  * @typedef {Object} IdentifierOptions
  * @property {number} version - version of the Identifier. Used for serialization
@@ -42,6 +40,3 @@ export interface LsatOptions {
   amountPaid?: number
   routingFeePaid?: number
 }
-
-declare class MacaroonClass extends Macaroon {}
-declare class CaveatPacketClass extends CaveatPacket {}

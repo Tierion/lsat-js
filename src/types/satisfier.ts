@@ -1,4 +1,4 @@
-import { Caveat } from '../src/caveat'
+import { Caveat } from '../caveat'
 
 /**
  * @typedef {function (prev: Caveat, curr: Caveat, options: object): boolean} SatisfyPrevious

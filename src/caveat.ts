@@ -3,13 +3,13 @@
  * @author Buck Perley
  */
 import assert from 'bsert'
-import { Macaroon, MacaroonsVerifier } from 'macaroons.js'
-import {
-  CaveatPacketClass,
-  MacaroonClass,
-  CaveatOptions,
-  Satisfier,
-} from '../@types'
+const {
+  Macaroon,
+  MacaroonsVerifier,
+  MacaroonsBuilder,
+} = require('macaroons.js')
+import { CaveatOptions, Satisfier } from './types'
+import { CaveatPacketInterface, MacaroonInterface } from './types'
 
 /**
  * @description Creates a new error describing a problem with creating a new caveat
@@ -116,12 +116,12 @@ export class Caveat {
 /**
  * @description hasCaveat will take a macaroon and a caveat and evaluate whether or not
  * that caveat exists on the macaroon
- * @param {MacaroonClass} macaroon
+ * @param {MacaroonInterface} macaroon
  * @param {Caveat|string} c
  * @returns {boolean}
  */
 export function hasCaveat(
-  macaroon: MacaroonClass,
+  macaroon: MacaroonInterface,
   c: Caveat | string
 ): string | boolean | ErrInvalidCaveat {
   assert(
@@ -136,7 +136,7 @@ export function hasCaveat(
   const condition = caveat.condition
 
   let value
-  macaroon.caveatPackets.forEach((packet: CaveatPacketClass) => {
+  macaroon.caveatPackets.forEach((packet: CaveatPacketInterface) => {
     try {
       const test = Caveat.decode(packet.getValueAsText())
       if (condition === test.condition) value = test.value
@@ -160,7 +160,7 @@ export function hasCaveat(
 export function verifyCaveats(
   caveats: Caveat[],
   satisfiers: Satisfier | Satisfier[],
-  options = {}
+  options: object = {}
 ): boolean {
   assert(satisfiers, 'Must have satisfiers in order to verify caveats')
 
@@ -215,7 +215,7 @@ export function verifyCaveats(
  * @description verifyFirstPartyMacaroon will check if a macaroon is valid or
  * not based on a set of satisfiers to pass as general caveat verifiers. This will also run
  * against caveat.verityCaveats to ensure that satisfyPrevious will validate
- * @param {Macaroon} macaroon A macaroon class to run a verifier against
+ * @param {MacaroonInterface} macaroon A macaroon class to run a verifier against
  * @param {String} secret The secret key used to sign the macaroon
  * @param {(Satisfier | Satisfier[])} satisfiers a single satisfier or list of satisfiers used to verify caveats
  * @param {Object} [options] An optional options object that will be passed to the satisfiers.
@@ -223,11 +223,18 @@ export function verifyCaveats(
  * @returns {boolean}
  */
 export function verifyFirstPartyMacaroon(
-  macaroon: MacaroonClass,
+  rawMac: MacaroonInterface,
   secret: string,
   satisfiers?: Satisfier | Satisfier[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: any = {}
 ): boolean {
+  let macaroon: MacaroonInterface
+  // if given a raw macaroon string, convert to a Macaroon class
+  if (typeof rawMac === 'string')
+    macaroon = MacaroonsBuilder.deserialize(rawMac)
+  else macaroon = rawMac
+
   const verifier = new MacaroonsVerifier(macaroon)
 
   if (satisfiers) {

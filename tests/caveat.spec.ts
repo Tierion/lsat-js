@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { MacaroonsBuilder } from 'macaroons.js'
 
 import { Caveat, ErrInvalidCaveat, hasCaveat, verifyCaveats } from '../src'
-import { Satisfier } from '../@types'
+import { Satisfier } from '../src/types'
 
 describe('Caveats', () => {
   describe('Caveat', () => {
