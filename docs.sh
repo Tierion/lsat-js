@@ -6,7 +6,7 @@ branch=gh-pages
 build_command() {
   mkdir $tempDir
   # generate the typedocs
-  typedoc --name ⚡️Boltwall⚡️ --readme ./README.md --includeDeclarations --out $tempDir --tsconfig src/tsconfig.json src/
+  typedoc --name LSAT-JS --readme ./README.md --includeDeclarations --out $tempDir --tsconfig src/tsconfig.json src/
   # add nojekyll so github pages builds correctly
   touch "$directory/.nojekyll"
   # move typedocs into deploying directory
