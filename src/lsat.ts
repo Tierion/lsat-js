@@ -1,6 +1,7 @@
-import assert from 'assert'
+const assert = require('bsert')
+const bufio = require('bufio')
+
 import crypto from 'crypto'
-import { Struct } from 'bufio'
 import { parsePaymentRequest } from 'ln-service'
 import { MacaroonsBuilder } from 'macaroons.js'
 
@@ -11,13 +12,14 @@ import { isHex } from './helpers'
 /**
  * @description A a class for creating and converting LSATs
  */
-export class Lsat extends Struct {
+export class Lsat extends bufio.Struct {
   id: string
-  validUntil: number
   baseMacaroon: string
   paymentHash: string
-  timeCreated: number
   paymentPreimage: string | null
+  validUntil: number
+  timeCreated: number
+  invoice: string
   amountPaid: number | null
   routingFeePaid: number | null
 

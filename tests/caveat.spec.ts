@@ -55,22 +55,22 @@ describe('Caveats', () => {
       let builder = new MacaroonsBuilder('location', 'secret', 'pubId')
       builder = builder.add_first_party_caveat(caveat.encode())
       let macaroon = builder.getMacaroon()
-
+    
       // check that it returns the value for the caveat we're checking for
-      expect(hasCaveat(macaroon, caveat)).to.equal(
+      expect(hasCaveat(macaroon.serialize(), caveat)).to.equal(
         caveat.value && caveat.value.toString()
       )
 
       // check that it will return false for a caveat that it doesn't have
       const fakeCaveat = new Caveat({ condition: 'foo', value: 'bar' })
-      expect(hasCaveat(macaroon, fakeCaveat)).to.be.false
+      expect(hasCaveat(macaroon.serialize(), fakeCaveat)).to.be.false
 
       // check that it will return the value of a newer caveat with the same condition
       const newerCaveat = new Caveat({ condition, value: value - 1 })
       builder = builder.add_first_party_caveat(newerCaveat.encode())
       macaroon = builder.getMacaroon()
 
-      expect(hasCaveat(macaroon, newerCaveat)).to.equal(
+      expect(hasCaveat(macaroon.serialize(), newerCaveat)).to.equal(
         newerCaveat.value && newerCaveat.value.toString()
       )
     })
@@ -83,7 +83,7 @@ describe('Caveats', () => {
       ).getMacaroon()
 
       const test = (): boolean | ErrInvalidCaveat | string =>
-        hasCaveat(macaroon, 'condition:fail')
+        hasCaveat(macaroon.serialize(), 'condition:fail')
 
       expect(test).to.throw(ErrInvalidCaveat)
     })

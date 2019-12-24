@@ -13,11 +13,7 @@ First install as a module using npm or yarn into your package:
 
 ```bash
 $> npm --save install lsat-js
-```
-
-or
-
-```bash
+# or
 $> yarn add lsat-js
 ```
 
@@ -31,7 +27,7 @@ offers utlities for working with Lsats including:
 - Working with caveats (restrictions placed on the LSAT's macaroon)
 
 To test with an actual server that issues LSATs, check out [boltwall](https://github.com/Tierion/boltwall).
-The below example assumes a running boltwall (or compatible) server running on your local machine.
+The below example assumes a running boltwall (or compatible) server on your local machine.
 The same utilities can be used against raw LSATs as well.
 
 ```js
@@ -50,7 +46,7 @@ fetch('http://localhost:5000/protected')
     console.log(paymentHash)
 
     // after the invocie is paid, you can add the preimage
-    // this just a stub for getting the preimage string
+    // this is just a stub for getting the preimage string
     const preimage = getPreimage()
 
     // this will validate that the preiamge is valid and throw if not
@@ -120,7 +116,7 @@ the macaroon contains that caveat.
 
 #### `verifyCaveats`
 
-Given one or a set of caveats and corresponding "satisfiers" to test the caveats against.
+Verifies caveats given one or a set of caveats and corresponding "satisfiers" to test the caveats against.
 A satisfier is an object with a condition, a `satisfyFinal` function, and an optional `satisfyPrevious`
 function. `satisfyFinal` will test only the last caveat on a macaroon of the matching condition
 and `satisfyPrevious` compares each caveat of the same condition against each other. This allows
@@ -128,6 +124,9 @@ more flexible attenuation where you can ensure, for example, that every "new" ca
 restrictive than a previously added one. In the case of an expiration, you probably want to have a satisfier
 that tests that a newer `expiration` is sooner than the first `expiration` added, otherwise, a client
 could add their own expiration further into the future.
+
+The exported `Satisfier` interface described in the docs provides more details on creating
+your own satisfiers
 
 #### `verifyFirstPartyMacaroon`
 

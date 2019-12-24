@@ -1,5 +1,5 @@
-import assert from 'assert'
-import { Struct } from 'bufio'
+const assert = require('assert')
+const bufio = require('bufio')
 import crypto from 'crypto'
 import uuidv4 from 'uuid/v4'
 
@@ -9,6 +9,7 @@ export const LATEST_VERSION = 0
 export const TOKEN_ID_SIZE = 32
 
 export class ErrUnknownVersion extends Error {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(version: number | string, ...params: any[]) {
     // Pass remaining arguments (including vendor specific ones) to parent constructor
     super(...params)
@@ -29,7 +30,7 @@ export class ErrUnknownVersion extends Error {
  * and is used to generate a macaroon.
  * @extends Struct
  */
-export class Identifier extends Struct {
+export class Identifier extends bufio.Struct {
   /**
    *
    * @param {Object} options - options to create a new Identifier

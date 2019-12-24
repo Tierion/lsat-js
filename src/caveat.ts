@@ -16,6 +16,7 @@ import { CaveatPacketInterface, MacaroonInterface } from './types'
  * @extends Error
  */
 export class ErrInvalidCaveat extends Error {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(...params: any[]) {
     // Pass remaining arguments (including vendor specific ones) to parent constructor
     super(...params)
@@ -116,14 +117,16 @@ export class Caveat {
 /**
  * @description hasCaveat will take a macaroon and a caveat and evaluate whether or not
  * that caveat exists on the macaroon
- * @param {MacaroonInterface} macaroon
- * @param {Caveat|string} c
+ * @param {string} rawMac - raw macaroon to determine caveats from
+ * @param {Caveat|string} c - Caveat to test against macaroon
  * @returns {boolean}
  */
 export function hasCaveat(
-  macaroon: MacaroonInterface,
+  rawMac: string,
   c: Caveat | string
 ): string | boolean | ErrInvalidCaveat {
+  const macaroon = MacaroonsBuilder.deserialize(rawMac)
+
   assert(
     macaroon instanceof Macaroon,
     'Expected a macaroon object as first argument'
@@ -215,7 +218,7 @@ export function verifyCaveats(
  * @description verifyFirstPartyMacaroon will check if a macaroon is valid or
  * not based on a set of satisfiers to pass as general caveat verifiers. This will also run
  * against caveat.verityCaveats to ensure that satisfyPrevious will validate
- * @param {MacaroonInterface} macaroon A macaroon class to run a verifier against
+ * @param {string} macaroon A raw macaroon to run a verifier against
  * @param {String} secret The secret key used to sign the macaroon
  * @param {(Satisfier | Satisfier[])} satisfiers a single satisfier or list of satisfiers used to verify caveats
  * @param {Object} [options] An optional options object that will be passed to the satisfiers.
@@ -223,7 +226,7 @@ export function verifyCaveats(
  * @returns {boolean}
  */
 export function verifyFirstPartyMacaroon(
-  rawMac: MacaroonInterface,
+  rawMac: string,
   secret: string,
   satisfiers?: Satisfier | Satisfier[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
