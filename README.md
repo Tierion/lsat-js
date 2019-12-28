@@ -84,6 +84,8 @@ A class for serializing and deserializing an LSAT. It supports:
 - Checking if the macaroon is expired
 - Versioning through the Identifier class (also exposed via `lsat-js`) to support future updates
   to LSAT serialization
+- Adding new first party caveats
+- Listing all caveats on an LSAT's macaroon
 
 #### Caveat
 
