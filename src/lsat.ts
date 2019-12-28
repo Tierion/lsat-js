@@ -70,7 +70,7 @@ export class Lsat extends bufio.Struct {
   }
 
   /**
-   * Determine if the LSAT is expired or not. This is based on the
+   * @description Determine if the LSAT is expired or not. This is based on the
    * `validUntil` property of the lsat which is evaluated at creation time
    * based on the macaroon and any existing expiration caveats
    * @returns {boolean}
@@ -81,7 +81,7 @@ export class Lsat extends bufio.Struct {
   }
 
   /**
-   * Determines if the lsat is valid or not depending on if there is a preimage or not
+   * @description Determines if the lsat is valid or not depending on if there is a preimage or not
    * @returns {boolean}
    */
   isPending(): boolean {
@@ -89,7 +89,7 @@ export class Lsat extends bufio.Struct {
   }
 
   /**
-   * Gets the base macaroon from the lsat
+   * @description Gets the base macaroon from the lsat
    * @returns {MacaroonInterface}
    */
   getMacaroon(): MacaroonInterface {
@@ -104,7 +104,7 @@ export class Lsat extends bufio.Struct {
    * @returns {number} expiration date
    */
   getExpirationFromMacaroon(macaroon?: string): number {
-    if (!macaroon) macaroon === this.baseMacaroon
+    if (!macaroon) macaroon = this.baseMacaroon
     assert(macaroon, 'Missing macaroon')
 
     const { caveatPackets } = MacaroonsBuilder.deserialize(macaroon)
@@ -124,7 +124,7 @@ export class Lsat extends bufio.Struct {
   }
 
   /**
-   * A utility for setting the preimage for an LSAT. This method will validate the preimage and throw
+   * @description A utility for setting the preimage for an LSAT. This method will validate the preimage and throw
    * if it is either of the incorrect length or does not match the paymentHash
    * @param {string} preimage - 32-byte hex string of the preimage that is used as proof of payment of a lightning invoice
    */
@@ -146,6 +146,45 @@ export class Lsat extends bufio.Struct {
     this.paymentPreimage = preimage
   }
 
+  /**
+   * @description Add a first party caveat onto the lsat's base macaroon.
+   * This method does not validate the caveat being added. So, for example, a
+   * caveat that would fail validation on submission could still be added (e.g. an
+   * expiration that is less restrictive then a previous one). This should be done by
+   * the implementer
+   * @param {Caveat} caveat - caveat to add to the macaroon
+   * @returns {void}
+   */
+  addFirstPartyCaveat(caveat: Caveat): void {
+    assert(
+      caveat instanceof Caveat,
+      'Require a Caveat object to add to macaroon'
+    )
+
+    const macaroon = this.getMacaroon()
+    const builder = MacaroonsBuilder.modify(macaroon)
+    const newMac = builder
+      .add_first_party_caveat(caveat.encode())
+      .getMacaroon()
+      .serialize()
+
+    this.baseMacaroon = newMac
+  }
+
+  /**
+   * @description Get a list of caveats from the base macaroon
+   * @returns {Caveat[]} caveats - list of caveats
+   */
+
+  getCaveats(): Caveat[] {
+    const caveats: Caveat[] = []
+    const { caveatPackets } = this.getMacaroon()
+
+    for (const { rawValue } of caveatPackets) {
+      caveats.push(Caveat.decode(rawValue.toString()))
+    }
+    return caveats
+  }
   /**
    * @description Converts the lsat into a valid LSAT token for use in an http
    * Authorization header. This will return a string in the form: "LSAT [macaroon]:[preimage?]".

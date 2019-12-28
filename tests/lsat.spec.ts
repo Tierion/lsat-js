@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import { parsePaymentRequest } from 'ln-service'
+import { MacaroonsBuilder } from 'macaroons.js'
 
 import { Caveat, Lsat } from '../src'
-
 import { invoice } from './data'
 import { getTestBuilder } from './utilities'
 
@@ -141,5 +141,63 @@ describe('LSAT Token', () => {
     expect(lsat.baseMacaroon).to.equal(macaroon)
     expect(!lsat.paymentPreimage).to.be.true
     expect(lsat.toToken()).to.equal(token)
+  })
+
+  it('should be able to add a first party caveat to the macaroon', () => {
+    const lsat = Lsat.fromChallenge(challenge)
+    const newCaveat = new Caveat({
+      condition: 'expiration',
+      value: expiration / 2,
+    })
+
+    const rawOriginal = lsat.baseMacaroon
+    lsat.addFirstPartyCaveat(newCaveat)
+    const rawMac = lsat.baseMacaroon
+
+    expect(rawMac).to.not.equal(
+      rawOriginal,
+      "LSAT's base macaroon should be updated"
+    )
+
+    const originalMac = MacaroonsBuilder.deserialize(rawOriginal)
+    const mac = MacaroonsBuilder.deserialize(rawMac)
+
+    expect(mac.caveatPackets.length).to.equal(
+      originalMac.caveatPackets.length + 1,
+      'new macaroon should have one more caveat than the original'
+    )
+
+    expect(lsat.getExpirationFromMacaroon()).to.equal(newCaveat.value)
+  })
+
+  it('should be able to return a list of caveats from the macaroon', () => {
+    const lsat = Lsat.fromChallenge(challenge)
+
+    const ogCount = lsat.getCaveats().length
+    const firstCaveat = new Caveat({ condition: 'name', value: 'john snow' })
+    const secondCaveat = new Caveat({
+      condition: 'number',
+      comp: '<',
+      value: 4,
+    })
+    const newCaveats = [firstCaveat, secondCaveat]
+
+    for (const c of newCaveats) {
+      lsat.addFirstPartyCaveat(c)
+    }
+
+    let caveats = lsat.getCaveats()
+    expect(caveats.length).to.equal(
+      ogCount + newCaveats.length,
+      `should have ${newCaveats.length} more caveats on base macaroon`
+    )
+
+    // test that the caveats match and are added in order
+    for (let i = 0; i < newCaveats.length; i++) {
+      caveats = caveats.slice(-newCaveats.length)
+      expect(newCaveats[i].condition).to.equal(caveats[i].condition)
+      expect(newCaveats[i].value == caveats[i].value).to.be.true
+      expect(newCaveats[i].comp).to.equal(caveats[i].comp)
+    }
   })
 })
