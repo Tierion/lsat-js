@@ -164,7 +164,8 @@ fetch(<span class="hljs-string">'http://localhost:5000/protected'</span>)
 <span class="hljs-built_in">console</span>.log(caveat.encode()) <span class="hljs-comment">// &gt; expiration=1577228778197</span>
 <span class="hljs-built_in">console</span>.log(Caveat.decode(caveat.encode())) <span class="hljs-comment">// creates new caveat w/ same properties</span></code></pre>
 				<p>To add the caveat to a macaroon you&#39;ll need to use a compatible macaroon library
-				such as <a href="https://github.com/nitram509/macaroons.js">macaroon.js</a></p>
+					such as <a href="https://github.com/nitram509/macaroons.js">macaroon.js</a>, or add it to an LSAT&#39;s
+				macaroon with the <code>addFirstPartyCaveat</code> method available on the <code>Lsat</code> object.</p>
 				<a href="#codehascaveatcode" id="codehascaveatcode" style="color: inherit; text-decoration: none;">
 					<h4><code>hasCaveat</code></h4>
 				</a>
@@ -217,6 +218,9 @@ fetch(<span class="hljs-string">'http://localhost:5000/protected'</span>)
 						<a href="modules/_src_lsat_.html">&quot;src/lsat&quot;</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="modules/_src_satisfiers_.html">&quot;src/satisfiers&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="modules/_src_types_index_.html">&quot;src/types/index&quot;</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -233,6 +237,9 @@ fetch(<span class="hljs-string">'http://localhost:5000/protected'</span>)
 					</li>
 					<li class="label tsd-is-external">
 						<span>Externals</span>
+					</li>
+					<li class=" tsd-kind-external-module tsd-is-external">
+						<a href="modules/_node_modules__types_bn_js_index_d_.html">&quot;node_<wbr>modules/@types/bn.js/index.d&quot;</a>
 					</li>
 					<li class=" tsd-kind-external-module tsd-is-external">
 						<a href="modules/_node_modules__types_bytebuffer_index_d_.html">&quot;node_<wbr>modules/@types/bytebuffer/index.d&quot;</a>
@@ -404,6 +411,9 @@ fetch(<span class="hljs-string">'http://localhost:5000/protected'</span>)
 					</li>
 					<li class=" tsd-kind-external-module tsd-is-external">
 						<a href="modules/_node_modules__types_uuid_v4_d_.html">&quot;node_<wbr>modules/@types/uuid/v4.d&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module tsd-is-external">
+						<a href="modules/_node_modules_bolt11_payreq_d_.html">&quot;node_<wbr>modules/bolt11/payreq.d&quot;</a>
 					</li>
 					<li class=" tsd-kind-external-module tsd-is-external">
 						<a href="modules/_node_modules_typescript_lib_lib_es2015_collection_d_.html">&quot;node_<wbr>modules/typescript/lib/lib.es2015.collection.d&quot;</a>
