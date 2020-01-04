@@ -2,13 +2,14 @@ const assert = require('bsert')
 const bufio = require('bufio')
 
 import crypto from 'crypto'
-import { parsePaymentRequest } from 'ln-service'
+import { decode } from 'bolt11'
 import { MacaroonsBuilder } from 'macaroons.js'
 
 import { Caveat, Identifier } from '.'
 import { LsatOptions, MacaroonInterface } from './types'
-import { isHex } from './helpers'
+import { isHex, getIdFromRequest } from './helpers'
 
+type LsatJson = {validUntil: number, isPending: boolean, isSatisfied: boolean} & LsatOptions
 /**
  * @description A a class for creating and converting LSATs
  */
@@ -81,13 +82,28 @@ export class Lsat extends bufio.Struct {
   }
 
   /**
-   * @description Determines if the lsat is valid or not depending on if there is a preimage or not
+   * @description Determines if the lsat is pending based on if it has a preimage
    * @returns {boolean}
    */
   isPending(): boolean {
     return this.paymentPreimage ? false : true
   }
 
+  /**
+   * @description Determines if the lsat is valid based on a valid preimage or not
+   * @returns {boolean}
+   */
+  isSatisfied(): boolean {
+    if (!this.paymentHash) return false
+    if (!this.paymentPreimage) return false
+    const hash = crypto
+      .createHash('sha256')
+      .update(Buffer.from(this.paymentPreimage, 'hex'))
+      .digest('hex')
+    if (hash !== this.paymentHash) return false
+    return true
+  }
+  
   /**
    * @description Gets the base macaroon from the lsat
    * @returns {MacaroonInterface}
@@ -211,6 +227,22 @@ export class Lsat extends bufio.Struct {
     return `LSAT ${Buffer.from(challenge).toString('base64')}`
   }
 
+  toJSON(): LsatJson {
+    return {
+      id: this.id,
+      validUntil: this.validUntil,
+      invoice: this.invoice,
+      baseMacaroon: this.baseMacaroon,
+      paymentHash: this.paymentHash,
+      timeCreated: this.timeCreated,
+      paymentPreimage: this.paymentPreimage || undefined, 
+      amountPaid: this.amountPaid || undefined,
+      routingFeePaid: this.routingFeePaid || undefined,
+      isPending: this.isPending(),
+      isSatisfied: this.isSatisfied()
+    }
+  }
+
   // Static API
 
   /**
@@ -236,14 +268,17 @@ export class Lsat extends bufio.Struct {
     }
 
     if (invoice) {
-      const { id: paymentHash, tokens } = parsePaymentRequest({
-        request: invoice,
-      })
+      const invData = decode(invoice)
+      const { satoshis: tokens } = invData
+      const hashTag = invData.tags.find(tag => tag.tagName === 'payment_hash')
+      assert(hashTag, 'Could not find payment hash on invoice request')
+      const paymentHash = hashTag?.data
+
       assert(
         paymentHash === id.paymentHash.toString('hex'),
         'paymentHash from invoice did not match invoice'
       )
-      options.amountPaid = tokens
+      options.amountPaid = tokens || undefined
       options.invoice = invoice
     }
 
@@ -254,19 +289,14 @@ export class Lsat extends bufio.Struct {
    * @description Create an LSAT from an http Authorization header. A useful utility
    * when trying to parse an LSAT sent in a request and determining its validity
    * @param {string} token - LSAT token sent in request
+   * @param {string} invoice - optional payment request information to intialize lsat with
    * @returns {Lsat}
    */
-  static fromToken(token: string): Lsat {
+  static fromToken(token: string, invoice?: string): Lsat {
     assert(token.includes(this.type), 'Token must include LSAT prefix')
     token = token.slice(this.type.length).trim()
     const [macaroon, preimage] = token.split(':')
-    const { identifier } = MacaroonsBuilder.deserialize(macaroon)
-    const id = Identifier.fromString(identifier)
-    const lsat = new this({
-      baseMacaroon: macaroon,
-      id: identifier,
-      paymentHash: id.paymentHash.toString('hex'),
-    })
+    const lsat = Lsat.fromMacaroon(macaroon, invoice)
 
     if (preimage) lsat.setPreimage(preimage)
     return lsat
@@ -326,8 +356,9 @@ export class Lsat extends bufio.Struct {
       invoice.length && macaroon.length,
       'Expected base64 encoded challenge with macaroon and invoice data'
     )
-    const request = parsePaymentRequest({ request: invoice })
-    const paymentHash = request.id
+  
+    const paymentHash = getIdFromRequest(invoice)
+
     const { identifier } = MacaroonsBuilder.deserialize(macaroon)
 
     return new this({

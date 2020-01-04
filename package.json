@@ -15,15 +15,18 @@
     "test": "ts-mocha -p tsconfig.json tests/**/*.spec.ts",
     "test:watch": "ts-mocha -p tsconfig.json --reporter spec --watch --watch-extensions ts tests/**/*.spec.ts",
     "docs": "./docs.sh",
-    "prepublishOnly": "npm run docs"
+    "prepublishOnly": "npm run docs",
+    "postversion": "git push && git push --tags"
   },
   "dependencies": {
     "@types/node": "^13.1.0",
     "@types/uuid": "^3.4.6",
+    "bolt11": "^1.2.6",
     "bsert": "^0.0.10",
     "bufio": "^1.0.6",
     "ln-service": "^47.8.0",
-    "macaroons.js": "^0.3.8"
+    "macaroons.js": "^0.3.8",
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
     "@types/chai": "^4.2.5",

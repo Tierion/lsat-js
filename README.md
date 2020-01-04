@@ -109,7 +109,8 @@ console.log(Caveat.decode(caveat.encode())) // creates new caveat w/ same proper
 ```
 
 To add the caveat to a macaroon you'll need to use a compatible macaroon library
-such as [macaroon.js](https://github.com/nitram509/macaroons.js)
+such as [macaroon.js](https://github.com/nitram509/macaroons.js), or add it to an LSAT's
+macaroon with the `addFirstPartyCaveat` method available on the `Lsat` object.
 
 #### `hasCaveat`
 

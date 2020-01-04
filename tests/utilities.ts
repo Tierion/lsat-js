@@ -1,16 +1,16 @@
-import { parsePaymentRequest } from 'ln-service'
 import { MacaroonsBuilder } from 'macaroons.js'
 import { randomBytes } from 'crypto'
 
 import { invoice } from './data'
 import { Identifier } from '../src'
+import { getIdFromRequest } from '../src/helpers'
 
 export class BuilderInterface extends MacaroonsBuilder {}
 export function getTestBuilder(secret: string): BuilderInterface {
-  const request = parsePaymentRequest({ request: invoice.payreq })
+  const paymentHash = getIdFromRequest(invoice.payreq)
 
   const identifier = new Identifier({
-    paymentHash: Buffer.from(request.id, 'hex'),
+    paymentHash: Buffer.from(paymentHash, 'hex'),
     tokenId: randomBytes(32),
   })
   const builder = new MacaroonsBuilder(

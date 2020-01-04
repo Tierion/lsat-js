@@ -1,10 +1,11 @@
 import { expect } from 'chai'
-import { parsePaymentRequest } from 'ln-service'
+
 import { MacaroonsBuilder } from 'macaroons.js'
 
 import { Caveat, Lsat } from '../src'
 import { invoice } from './data'
 import { getTestBuilder } from './utilities'
+import { getIdFromRequest } from '../src/helpers'
 
 describe('LSAT Token', () => {
   let macaroon: string,
@@ -17,9 +18,8 @@ describe('LSAT Token', () => {
   beforeEach(() => {
     expiration = Date.now() + 1000
     const caveat = new Caveat({ condition: 'expiration', value: expiration })
-    const request = parsePaymentRequest({ request: invoice.payreq })
+    paymentHash = getIdFromRequest(invoice.payreq)
 
-    paymentHash = request.id
     paymentPreimage = invoice.secret
 
     const builder = getTestBuilder('secret')
@@ -199,5 +199,14 @@ describe('LSAT Token', () => {
       expect(newCaveats[i].value == caveats[i].value).to.be.true
       expect(newCaveats[i].comp).to.equal(caveats[i].comp)
     }
+  })
+
+  it('should be able to determine if an LSAT is satisfied or not', () => {
+    const lsat = Lsat.fromChallenge(challenge)
+    expect(lsat.isSatisfied()).to.be.false
+    lsat.paymentPreimage = '12345'
+    expect(lsat.isSatisfied()).to.be.false
+    lsat.setPreimage(paymentPreimage)
+    expect(lsat.isSatisfied()).to.be.true
   })
 })
