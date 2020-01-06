@@ -10,6 +10,22 @@ import { LsatOptions, MacaroonInterface } from './types'
 import { isHex, getIdFromRequest } from './helpers'
 
 type LsatJson = {validUntil: number, isPending: boolean, isSatisfied: boolean} & LsatOptions
+
+/** Helpers */
+
+function parseChallengePart(challenge:string): string {
+  let macaroon      
+  const split = challenge.split('=')
+  assert(split.length === 2, 'Incorrectly encoded macaroon challenge')
+  macaroon = split[split.length - 1].trim()
+  assert(
+    macaroon[0] === '"' && macaroon[macaroon.length -1] === '"', 
+    'Incorecctly encoded macaroon challenge, must be enclosed in double quotes.'
+  )
+  macaroon = macaroon.slice(1, macaroon.length - 1)
+  return macaroon
+}
+
 /**
  * @description A a class for creating and converting LSATs
  */
@@ -103,7 +119,7 @@ export class Lsat extends bufio.Struct {
     if (hash !== this.paymentHash) return false
     return true
   }
-  
+
   /**
    * @description Gets the base macaroon from the lsat
    * @returns {MacaroonInterface}
@@ -223,8 +239,8 @@ export class Lsat extends bufio.Struct {
       this.invoice,
       `Can't create a challenge without a payment request/invoice`
     )
-    const challenge = `macaroon=${this.baseMacaroon}, invoice=${this.invoice}`
-    return `LSAT ${Buffer.from(challenge).toString('base64')}`
+    const challenge = `macaroon="${this.baseMacaroon}", invoice="${this.invoice}"`
+    return `LSAT ${challenge}`
   }
 
   toJSON(): LsatJson {
@@ -309,8 +325,6 @@ export class Lsat extends bufio.Struct {
    * @returns {Lsat}
    */
   static fromChallenge(challenge: string): Lsat {
-    // challenge should be in base64 encoding, so we need to convert it to utf8 first
-    challenge = Buffer.from(challenge, 'base64').toString('utf8')
     const macChallenge = 'macaroon='
     const invoiceChallenge = 'invoice='
 
@@ -336,16 +350,20 @@ export class Lsat extends bufio.Struct {
     for (const c of challenges) {
       // check if we're looking at the macaroon challenge
       if (!macaroon.length && c.indexOf(macChallenge) > -1) {
-        const split = c.split('=')
-        assert(split.length === 2, 'Incorrectly encoded macaroon challenge')
-        macaroon = split[split.length - 1].trim()
+        try {
+          macaroon = parseChallengePart(c)
+        } catch (e) {
+          throw new Error(`Problem parsing macaroon challenge: ${e.message}`)
+        }
       }
 
       // check if we're looking at the invoice challenge
       if (!invoice.length && c.indexOf(invoiceChallenge) > -1) {
-        const split = c.split('=')
-        assert(split.length === 2, 'Incorrectly encoded invoice challenge')
-        invoice = split[split.length - 1].trim()
+        try {
+          invoice = parseChallengePart(c)
+        } catch (e) {
+          throw new Error(`Problem parsing macaroon challenge: ${e.message}`)
+        }
       }
       // if there are other challenges but we have mac and invoice then we can break
       // as they are not LSAT relevant anyway
@@ -354,7 +372,7 @@ export class Lsat extends bufio.Struct {
 
     assert(
       invoice.length && macaroon.length,
-      'Expected base64 encoded challenge with macaroon and invoice data'
+      'Expected WWW-Authenticate challenge with macaroon and invoice data'
     )
   
     const paymentHash = getIdFromRequest(invoice)

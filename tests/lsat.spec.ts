@@ -7,7 +7,7 @@ import { invoice } from './data'
 import { getTestBuilder } from './utilities'
 import { getIdFromRequest } from '../src/helpers'
 
-describe('LSAT Token', () => {
+describe.only('LSAT Token', () => {
   let macaroon: string,
     paymentHash: string,
     paymentPreimage: string,
@@ -28,12 +28,8 @@ describe('LSAT Token', () => {
       .getMacaroon()
       .serialize()
 
-    challenge = `macaroon=${macaroon}, invoice=${invoice.payreq}`
-    challenge = Buffer.from(challenge, 'utf8').toString('base64')
-    challengeWithSpace = `macaroon=${macaroon} invoice=${invoice.payreq}`
-    challengeWithSpace = Buffer.from(challengeWithSpace, 'utf8').toString(
-      'base64'
-    )
+    challenge = `macaroon="${macaroon}", invoice="${invoice.payreq}"`
+    challengeWithSpace = `macaroon="${macaroon}" invoice="${invoice.payreq}"`
   })
 
   it('should be able to decode from challenge and from header', () => {
@@ -76,8 +72,9 @@ describe('LSAT Token', () => {
     }
 
     const missingInvoice = (): Lsat =>
-      Lsat.fromChallenge(`macaroon=${macaroon}`)
-    const missingMacaroon = (): Lsat => Lsat.fromChallenge(`invoice=${invoice}`)
+      Lsat.fromChallenge(`macaroon="${macaroon}"`)
+    const missingMacaroon = (): Lsat =>
+      Lsat.fromChallenge(`invoice="${invoice}"`)
 
     expect(
       missingInvoice,
@@ -89,6 +86,36 @@ describe('LSAT Token', () => {
     ).to.throw()
   })
 
+  it('should throw fromChallenge if challenge is incorrectly encoded', () => {
+    const { payreq } = invoice
+    const incorrectEncodings = [
+      {
+        challenge: `macaroon=${macaroon}, invoice="${payreq}"`,
+        name: 'macaroon not in double quotes',
+      },
+      {
+        challenge: `macaroon="${macaroon}" invoice=${payreq}`,
+        name: 'invoice not in double quotes',
+      },
+      {
+        challenge: `macaroon=${macaroon} invoice=${payreq}`,
+        name: 'neither part in double quotes',
+      },
+      {
+        challenge: `macaroon="${macaroon}"`,
+        name: 'missing invoice',
+      },
+      {
+        challenge: `invoice="${payreq}"`,
+        name: 'missing macaroon',
+      },
+    ]
+
+    for (const c of incorrectEncodings) {
+      const test = (): Lsat => Lsat.fromChallenge(c.challenge)
+      expect(test, `Should have thrown an error with ${c.name}`).to.throw()
+    }
+  })
   it('should be able to check expiration to see if expired', () => {
     const lsat = Lsat.fromChallenge(challenge)
     expect(lsat.isExpired()).to.be.false
