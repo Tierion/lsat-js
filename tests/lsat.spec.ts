@@ -1,13 +1,14 @@
 import { expect } from 'chai'
 
 import { MacaroonsBuilder } from 'macaroons.js'
+import { decode } from 'bolt11'
 
 import { Caveat, Lsat } from '../src'
 import { invoice } from './data'
 import { getTestBuilder } from './utilities'
 import { getIdFromRequest } from '../src/helpers'
 
-describe.only('LSAT Token', () => {
+describe('LSAT Token', () => {
   let macaroon: string,
     paymentHash: string,
     paymentPreimage: string,
@@ -235,5 +236,30 @@ describe.only('LSAT Token', () => {
     expect(lsat.isSatisfied()).to.be.false
     lsat.setPreimage(paymentPreimage)
     expect(lsat.isSatisfied()).to.be.true
+  })
+
+  it('should be able to generate an LSAT from a macaroon and invoice', () => {
+    let lsat = Lsat.fromMacaroon(macaroon)
+
+    expect(lsat.baseMacaroon).to.equal(macaroon)
+
+    lsat = Lsat.fromMacaroon(macaroon, invoice.payreq)
+    expect(lsat.baseMacaroon).to.equal(macaroon)
+    expect(lsat.invoice).to.equal(invoice.payreq)
+    const invAmount = decode(invoice.payreq).satoshis || 0
+    expect(lsat.invoiceAmount).to.equal(+invAmount)
+  })
+
+  it('should be able to add an invoice', () => {
+    const lsat = Lsat.fromMacaroon(macaroon)
+    const invAmount = decode(invoice.payreq).satoshis || 0
+
+    lsat.addInvoice(invoice.payreq)
+
+    expect(lsat.invoice).to.equal(invoice.payreq)
+    expect(lsat.invoiceAmount).to.equal(invAmount)
+
+    const addInvalidInv = (): void => lsat.addInvoice('12345')
+    expect(addInvalidInv).to.throw()
   })
 })

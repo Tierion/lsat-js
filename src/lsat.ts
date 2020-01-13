@@ -9,7 +9,12 @@ import { Caveat, Identifier } from '.'
 import { LsatOptions, MacaroonInterface } from './types'
 import { isHex, getIdFromRequest } from './helpers'
 
-type LsatJson = {validUntil: number, isPending: boolean, isSatisfied: boolean} & LsatOptions
+type LsatJson = {
+  validUntil: number, 
+  isPending: boolean, 
+  isSatisfied: boolean, 
+  invoiceAmount: number
+} & LsatOptions
 
 /** Helpers */
 
@@ -39,6 +44,7 @@ export class Lsat extends bufio.Struct {
   invoice: string
   amountPaid: number | null
   routingFeePaid: number | null
+  invoiceAmount: number
 
   static type = 'LSAT'
 
@@ -53,6 +59,7 @@ export class Lsat extends bufio.Struct {
     this.paymentPreimage = null
     this.amountPaid = 0
     this.routingFeePaid = 0
+    this.invoiceAmount = 0
 
     if (options) this.fromOptions(options)
   }
@@ -73,7 +80,9 @@ export class Lsat extends bufio.Struct {
     const expiration = this.getExpirationFromMacaroon(options.baseMacaroon)
     if (expiration) this.validUntil = expiration
 
-    if (options.invoice) this.invoice = options.invoice
+    if (options.invoice) {
+      this.addInvoice(options.invoice)
+    }
 
     if (options.timeCreated) this.timeCreated = options.timeCreated
 
@@ -253,12 +262,32 @@ export class Lsat extends bufio.Struct {
       timeCreated: this.timeCreated,
       paymentPreimage: this.paymentPreimage || undefined, 
       amountPaid: this.amountPaid || undefined,
+      invoiceAmount: this.invoiceAmount,
       routingFeePaid: this.routingFeePaid || undefined,
       isPending: this.isPending(),
       isSatisfied: this.isSatisfied()
     }
   }
 
+  addInvoice(invoice: string): void {
+    assert(this.paymentHash, 'Cannot add invoice data to an LSAT without paymentHash')
+      try {
+        const data = decode(invoice)
+        const { satoshis: tokens } = data
+        const hashTag = data.tags.find(tag => tag.tagName === 'payment_hash')
+        assert(hashTag, 'Could not find payment hash on invoice request')
+        const paymentHash = hashTag?.data
+  
+        assert(
+          paymentHash === this.paymentHash,
+          'paymentHash from invoice did not match LSAT'
+        )
+        this.invoiceAmount = tokens || 0
+        this.invoice = invoice
+      } catch (e) {
+        throw new Error(`Problem adding invoice data to LSAT: ${e.message}`)
+      }
+  }
   // Static API
 
   /**
@@ -267,6 +296,7 @@ export class Lsat extends bufio.Struct {
    * @param {string} [invoice] - optional invoice which can provide other relevant information for the lsat
    */
   static fromMacaroon(macaroon: string, invoice?: string): Lsat {
+    assert(typeof macaroon === 'string', 'Requires a raw macaroon string for macaroon to generate LSAT')
     const { identifier } = MacaroonsBuilder.deserialize(macaroon)
     let id: Identifier
     try {
@@ -282,23 +312,13 @@ export class Lsat extends bufio.Struct {
       baseMacaroon: macaroon,
       paymentHash: id.paymentHash.toString('hex'),
     }
-
+    const lsat = new this(options)
+    
     if (invoice) {
-      const invData = decode(invoice)
-      const { satoshis: tokens } = invData
-      const hashTag = invData.tags.find(tag => tag.tagName === 'payment_hash')
-      assert(hashTag, 'Could not find payment hash on invoice request')
-      const paymentHash = hashTag?.data
-
-      assert(
-        paymentHash === id.paymentHash.toString('hex'),
-        'paymentHash from invoice did not match invoice'
-      )
-      options.amountPaid = tokens || undefined
-      options.invoice = invoice
+      lsat.addInvoice(invoice)
     }
 
-    return new this(options)
+    return lsat
   }
 
   /**
