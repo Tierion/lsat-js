@@ -58,6 +58,7 @@ describe('LSAT Token', () => {
     for (const { name, test } of tests) {
       expect(test, `${name} should not have thrown`).to.not.throw()
       const lsat = test()
+
       expect(lsat.baseMacaroon).to.equal(
         macaroon,
         `macaroon from ${name} LSAT did not match`

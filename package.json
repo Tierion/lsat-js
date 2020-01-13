@@ -15,7 +15,7 @@
     "test": "ts-mocha -p tsconfig.json tests/**/*.spec.ts",
     "test:watch": "ts-mocha -p tsconfig.json --reporter spec --watch --watch-extensions ts tests/**/*.spec.ts",
     "docs": "./docs.sh",
-    "prepublishOnly": "npm run docs",
+    "prepublishOnly": "npm run clean && npm run build && npm run docs",
     "postversion": "git push && git push --tags"
   },
   "dependencies": {
