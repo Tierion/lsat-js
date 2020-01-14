@@ -80,7 +80,7 @@ export class Identifier extends bufio.Struct {
   }
 
   /**
-   * Convert lsat to string
+   * Convert identifier to string
    * @returns {string}
    */
   toString(): string {
