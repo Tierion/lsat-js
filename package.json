@@ -1,6 +1,6 @@
 {
   "name": "lsat-js",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Utility library for working with LSAT auth tokens in javascript",
   "main": "./dist/index.js",
   "repository": "https://github.com/Tierion/lsat-js",
