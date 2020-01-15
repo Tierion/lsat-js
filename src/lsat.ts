@@ -2,12 +2,11 @@ const assert = require('bsert')
 const bufio = require('bufio')
 
 import crypto from 'crypto'
-import { decode } from 'bolt11'
 import { MacaroonsBuilder } from 'macaroons.js'
 
 import { Caveat, Identifier } from '.'
 import { LsatOptions, MacaroonInterface } from './types'
-import { isHex, getIdFromRequest } from './helpers'
+import { isHex, getIdFromRequest, decode } from './helpers'
 
 type LsatJson = {
   validUntil: number, 
@@ -272,9 +271,10 @@ export class Lsat extends bufio.Struct {
   addInvoice(invoice: string): void {
     assert(this.paymentHash, 'Cannot add invoice data to an LSAT without paymentHash')
       try {
+        type Tag = {tagName: string, data?: string}
         const data = decode(invoice)
         const { satoshis: tokens } = data
-        const hashTag = data.tags.find(tag => tag.tagName === 'payment_hash')
+        const hashTag = data.tags.find((tag: Tag) => tag.tagName === 'payment_hash')
         assert(hashTag, 'Could not find payment hash on invoice request')
         const paymentHash = hashTag?.data
   

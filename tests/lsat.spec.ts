@@ -1,12 +1,11 @@
 import { expect } from 'chai'
 
 import { MacaroonsBuilder } from 'macaroons.js'
-import { decode } from 'bolt11'
 
 import { Caveat, Lsat } from '../src'
 import { invoice } from './data'
 import { getTestBuilder } from './utilities'
-import { getIdFromRequest } from '../src/helpers'
+import { getIdFromRequest, decode } from '../src/helpers'
 
 describe('LSAT Token', () => {
   let macaroon: string,
