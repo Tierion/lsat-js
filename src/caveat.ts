@@ -248,6 +248,7 @@ export function verifyFirstPartyMacaroon(
       // into a caveat object and pass that to our satisfier functions
       verifier.satisfyGeneral((rawCaveat: string) => {
         const caveat = Caveat.decode(rawCaveat)
+        if (satisfier.condition !== caveat.condition) return false
         const valid = satisfier.satisfyFinal(caveat, options)
         return valid
       })
