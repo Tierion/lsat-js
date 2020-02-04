@@ -1,5 +1,6 @@
-[![Build Status](https://travis-ci.com/Tierion/lsat-js.svg?branch=master)](https://travis-ci.com/Tierion/lsat-js)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+[![Build Status](https://travis-ci.com/Tierion/lsat-js.svg?branch=master)](https://travis-ci.com/Tierion/lsat-js)
+[![Coverage Status](https://coveralls.io/repos/github/Tierion/lsat-js/badge.svg)](https://coveralls.io/github/Tierion/lsat-js)
 
 # LSAT-JS
 
