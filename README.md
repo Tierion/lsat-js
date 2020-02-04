@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.com/Tierion/lsat-js.svg?branch=master)](https://travis-ci.com/Tierion/lsat-js)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+
 # LSAT-JS
 
 `lsat-js` is a suite of tools for working with LSATs in Nodejs and Typescript.
