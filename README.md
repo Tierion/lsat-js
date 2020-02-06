@@ -49,11 +49,11 @@ fetch('http://localhost:5000/protected')
     console.log(lsat.baseMacaroon)
     console.log(lsat.paymentHash)
 
-    // after the invocie is paid, you can add the preimage
+    // after the invoice is paid, you can add the preimage
     // this is just a stub for getting the preimage string
     const preimage = getPreimage()
 
-    // this will validate that the preiamge is valid and throw if not
+    // this will validate that the preimage is valid and throw if not
     lsat.setPreimage(preimage)
 
     return fetch('http://localhost:5000/protected', {
@@ -84,7 +84,7 @@ A class for serializing and deserializing an LSAT. It supports:
 - Getting an LSAT the raw challenge (header without the `LSAT` type prefix)
 - Serializing and Deserializing from a "token" (i.e. what the client sends in the `Authorization` header)
 - Adding and verifying the preimage (it will throw if the preimage is not properly formatted
-  or if it not does not match the invoice's payment hash)
+  or if it does not match the invoice's payment hash)
 - Checking if the macaroon is expired
 - Versioning through the Identifier class (also exposed via `lsat-js`) to support future updates
   to LSAT serialization
@@ -108,7 +108,7 @@ const caveat = new Caveat({
   value: Date.now() + 10000, // expires in 10 seconds
   comp: '=', // this is the default value, also supports "<" and ">"
 })
-console.log(caveat.encode()) // > expiration=1577228778197
+console.log(caveat.encode()) // returns `expiration=1577228778197`
 console.log(Caveat.decode(caveat.encode())) // creates new caveat w/ same properties
 ```
 
