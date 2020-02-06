@@ -41,24 +41,24 @@ import fetch from 'node-fetch'
 // fetching a protected route which will return a 402 response and LSAT challenge
 fetch('http://localhost:5000/protected')
   .then(resp => {
-    const header = resp.headers.get('www-authentciate')
+    const header = resp.headers.get('www-authenticate')
     const lsat = Lsat.fromHeader(header)
 
     // show some information about the lsat
     console.log(lsat.invoice)
     console.log(lsat.baseMacaroon)
-    console.log(paymentHash)
+    console.log(lsat.paymentHash)
 
     // after the invocie is paid, you can add the preimage
     // this is just a stub for getting the preimage string
     const preimage = getPreimage()
 
     // this will validate that the preiamge is valid and throw if not
-    last.setPreimage(preimage)
+    lsat.setPreimage(preimage)
 
     return fetch('http://localhost:5000/protected', {
       headers: {
-        'Authorization', lsat.toToken()
+        'Authorization': lsat.toToken()
       }
     })
   })
