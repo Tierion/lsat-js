@@ -2,10 +2,22 @@ import { expect } from 'chai'
 
 import { MacaroonsBuilder } from 'macaroons.js'
 
-import { Caveat, Lsat } from '../src'
-import { invoice } from './data'
+import { Caveat, Lsat, parseChallengePart } from '../src'
+import { testChallenges, invoice, goMacaroonChallenge } from './data'
 import { getTestBuilder } from './utilities'
 import { getIdFromRequest, decode } from '../src/helpers'
+import { importMacaroon } from 'macaroon'
+
+describe('parseChallengePart', () => {
+  it('should handle macaroon with base64 padding', () => {
+    for (const challenge of testChallenges) {
+      expect(() => parseChallengePart(challenge.challenge)).not.to.throw()
+      expect(parseChallengePart(challenge.challenge)).to.equal(
+        challenge.expectedValue
+      )
+    }
+  })
+})
 
 describe('LSAT Token', () => {
   let macaroon: string,
@@ -54,6 +66,7 @@ describe('LSAT Token', () => {
         test: fromHeader,
       },
     ]
+
     for (const { name, test } of tests) {
       expect(test, `${name} should not have thrown`).to.not.throw()
       const lsat = test()
@@ -85,6 +98,8 @@ describe('LSAT Token', () => {
       missingMacaroon,
       'Should throw when challenge is missing macaroon'
     ).to.throw()
+
+    expect(() => Lsat.fromChallenge(goMacaroonChallenge)).to.not.throw()
   })
 
   it('should throw fromChallenge if challenge is incorrectly encoded', () => {
@@ -109,6 +124,11 @@ describe('LSAT Token', () => {
       {
         challenge: `invoice="${payreq}"`,
         name: 'missing macaroon',
+      },
+      {
+        challenge:
+          'macaroon="AgESMy4xMzYuMTc4LjE1OjM0MjM4AkIAAD2b0rX78LATiVo8bKgHuurefeF5OeX2H5ZuacBIK3+RAR1PKU1oZpfCZFib4zdDoj0pOpgPmhtuzNllU+y//D0AAAYgcWFs9FIteCzpCcEPSwmXKBpcx97hyL5Yt99cbLjRHzU=", invoice="lntb20n1psza5dwpp58kda9d0m7zcp8z2683k2spa6at08mcte88jlv8ukde5uqjpt07gsdzjfp85gnpqd9h8vmmfvdjjqurp09kk2mn5ypn8ymmdyppksctfdecx76twwssyxmmjv5sxcmny8gcnqvps8ycqzpgsp5m7xru8dlhrhmwjp8gynsj2l9mwan2jk52ah5xucrn9kc3p0pj5ns9qy9qsq7jjxypyyc7hvvs8srh6c3lvcp5l5wka94htnfxak99hd5qrx69sya9sj4zm3w5lncw0tksf944q73tduhlhs5apd63m9dte9dhva5dgqaceunx"',
+        name: 'weird padding',
       },
     ]
 

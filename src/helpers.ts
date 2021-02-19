@@ -20,14 +20,14 @@ export function decode(req: string): any {
 }
 
 export function getIdFromRequest(req: string): string {
-    const request = decode(req)
-    type Tag = {tagName: string, data?: string}
-    const hashTag = request.tags.find((tag: Tag) => tag.tagName === 'payment_hash')
-    assert(hashTag && hashTag.data, 'Could not find payment hash on invoice request')
-    const paymentHash = hashTag?.data.toString()
-    
-    if (!paymentHash || !paymentHash.length) 
-      throw new Error('Could not get payment hash from payment request')
-    
-      return paymentHash
+  const request = decode(req)
+  type Tag = {tagName: string, data?: string}
+  const hashTag = request.tags.find((tag: Tag) => tag.tagName === 'payment_hash')
+  assert(hashTag && hashTag.data, 'Could not find payment hash on invoice request')
+  const paymentHash = hashTag?.data.toString()
+  
+  if (!paymentHash || !paymentHash.length) 
+    throw new Error('Could not get payment hash from payment request')
+  
+  return paymentHash
 }
