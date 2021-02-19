@@ -6,7 +6,6 @@ import { Caveat, Lsat, parseChallengePart } from '../src'
 import { testChallenges, invoice, goMacaroonChallenge } from './data'
 import { getTestBuilder } from './utilities'
 import { getIdFromRequest, decode } from '../src/helpers'
-import { importMacaroon } from 'macaroon'
 
 describe('parseChallengePart', () => {
   it('should handle macaroon with base64 padding', () => {
