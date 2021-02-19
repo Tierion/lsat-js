@@ -97,7 +97,7 @@ export class Identifier extends bufio.Struct {
    * @returns {Identifier}
    */
   write(bw: any): this {
-    bw.writeU16(this.version)
+    bw.writeU16BE(this.version)
 
     switch (this.version) {
       case 0:
@@ -125,7 +125,7 @@ export class Identifier extends bufio.Struct {
    * @returns {Identifier}
    */
   read(br: any): this {
-    this.version = br.readU16()
+    this.version = br.readU16BE()
 
     switch (this.version) {
       case 0:
