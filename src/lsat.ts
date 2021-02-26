@@ -2,10 +2,10 @@ const assert = require('bsert')
 const bufio = require('bufio')
 
 import crypto from 'crypto'
-import { MacaroonsBuilder } from 'macaroons.js'
+import * as Macaroon from 'macaroon'
 
 import { Caveat, Identifier } from '.'
-import { LsatOptions, MacaroonInterface } from './types'
+import { LsatOptions } from './types'
 import { isHex, getIdFromRequest, decode } from './helpers'
 
 type LsatJson = {
@@ -137,8 +137,8 @@ export class Lsat extends bufio.Struct {
    * @description Gets the base macaroon from the lsat
    * @returns {MacaroonInterface}
    */
-  getMacaroon(): MacaroonInterface {
-    return MacaroonsBuilder.deserialize(this.baseMacaroon)
+  getMacaroon(): Macaroon.MacaroonJSONV2 {
+    return Macaroon.importMacaroon(this.baseMacaroon)._exportAsJSONObjectV2()
   }
 
   /**
@@ -152,12 +152,16 @@ export class Lsat extends bufio.Struct {
     if (!macaroon) macaroon = this.baseMacaroon
     assert(macaroon, 'Missing macaroon')
 
-    const { caveatPackets } = MacaroonsBuilder.deserialize(macaroon)
-
+    const caveatPackets = Macaroon.importMacaroon(macaroon)._exportAsJSONObjectV2().c
     const expirationCaveats = []
-
-    for (const { rawValue } of caveatPackets) {
-      const caveat = Caveat.decode(rawValue.toString())
+    if (caveatPackets == undefined) {
+      return 0
+    }
+    for (const cav of caveatPackets) {
+      if (cav.i == undefined) {
+        continue
+      }
+      const caveat = Caveat.decode(cav.i)
       if (caveat.condition === 'expiration') expirationCaveats.push(caveat)
     }
 
@@ -206,14 +210,9 @@ export class Lsat extends bufio.Struct {
       'Require a Caveat object to add to macaroon'
     )
 
-    const macaroon = this.getMacaroon()
-    const builder = MacaroonsBuilder.modify(macaroon)
-    const newMac = builder
-      .add_first_party_caveat(caveat.encode())
-      .getMacaroon()
-      .serialize()
-
-    this.baseMacaroon = newMac
+    const mac = Macaroon.importMacaroon(this.baseMacaroon)
+    mac.addFirstPartyCaveat(caveat.encode())
+    this.baseMacaroon = Macaroon.bytesToBase64(mac._exportBinaryV2())
   }
 
   /**
@@ -223,10 +222,15 @@ export class Lsat extends bufio.Struct {
 
   getCaveats(): Caveat[] {
     const caveats: Caveat[] = []
-    const { caveatPackets } = this.getMacaroon()
-
-    for (const { rawValue } of caveatPackets) {
-      caveats.push(Caveat.decode(rawValue.toString()))
+    const caveatPackets = this.getMacaroon().c
+    if (caveatPackets == undefined){
+      return caveats
+    }
+    for (const cav of caveatPackets) {
+      if (cav.i == undefined) {
+        continue
+      }
+      caveats.push(Caveat.decode(cav.i))
     }
     return caveats
   }
@@ -302,9 +306,14 @@ export class Lsat extends bufio.Struct {
    */
   static fromMacaroon(macaroon: string, invoice?: string): Lsat {
     assert(typeof macaroon === 'string', 'Requires a raw macaroon string for macaroon to generate LSAT')
-    const { identifier } = MacaroonsBuilder.deserialize(macaroon)
+    const identifier = Macaroon.importMacaroon(macaroon)._exportAsJSONObjectV2().i
     let id: Identifier
     try {
+      if (identifier == undefined) {
+        throw new Error(
+            `macaroon identifier undefined`
+        )
+      }
       id = Identifier.fromString(identifier)
     } catch (e) {
       throw new Error(
@@ -402,7 +411,10 @@ export class Lsat extends bufio.Struct {
   
     const paymentHash = getIdFromRequest(invoice)
 
-    const { identifier } = MacaroonsBuilder.deserialize(macaroon)
+    const identifier = Macaroon.importMacaroon(macaroon)._exportAsJSONObjectV2().i
+    if (identifier == undefined){
+      throw new Error(`Problem parsing macaroon identifier`)
+    }
 
     return new this({
       id: identifier,

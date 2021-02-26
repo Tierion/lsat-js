@@ -3,13 +3,23 @@
  * @author Buck Perley
  */
 import assert from 'bsert'
-const {
-  Macaroon,
-  MacaroonsVerifier,
-  MacaroonsBuilder,
-} = require('macaroons.js')
 import { CaveatOptions, Satisfier } from './types'
-import { CaveatPacketInterface, MacaroonInterface } from './types'
+import * as Macaroon from 'macaroon'
+import {MacaroonJSONV2} from "macaroon/src/macaroon";
+
+let TextEncoder
+if (typeof window !== 'undefined' && window && window.TextEncoder) {
+  TextEncoder = window.TextEncoder;
+} else {
+  // No window.TextEncoder if it's node.js.
+  const util = require('util');
+  TextEncoder = util.TextEncoder;
+}
+
+const utf8Encoder = new TextEncoder();
+const isValue = (x: string | null | undefined) => x !== undefined && x !== null;
+const stringToBytes = (s: string | null | undefined) => isValue(s) ? utf8Encoder.encode(s) : s;
+
 
 /**
  * @description Creates a new error describing a problem with creating a new caveat
@@ -125,13 +135,10 @@ export function hasCaveat(
   rawMac: string,
   c: Caveat | string
 ): string | boolean | ErrInvalidCaveat {
-  const macaroon = MacaroonsBuilder.deserialize(rawMac)
-
-  assert(
-    macaroon instanceof Macaroon,
-    'Expected a macaroon object as first argument'
-  )
-
+  const macaroon = Macaroon.importMacaroon(rawMac)._exportAsJSONObjectV2()
+  if (macaroon.c == undefined){
+    return false
+  }
   let caveat: Caveat
   if (typeof c === 'string') caveat = Caveat.decode(c)
   else caveat = c
@@ -139,10 +146,12 @@ export function hasCaveat(
   const condition = caveat.condition
 
   let value
-  macaroon.caveatPackets.forEach((packet: CaveatPacketInterface) => {
+  macaroon.c.forEach((packet: MacaroonJSONV2.Caveat) => {
     try {
-      const test = Caveat.decode(packet.getValueAsText())
-      if (condition === test.condition) value = test.value
+      if (packet.i != undefined) {
+        const test = Caveat.decode(packet.i)
+        if (condition === test.condition) value = test.value
+      }
     } catch (e) {
       // ignore if caveat is unable to be decoded since we don't know it anyway
     }
@@ -232,37 +241,30 @@ export function verifyFirstPartyMacaroon(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: any = {}
 ): boolean {
-  let macaroon: MacaroonInterface
   // if given a raw macaroon string, convert to a Macaroon class
-  if (typeof rawMac === 'string')
-    macaroon = MacaroonsBuilder.deserialize(rawMac)
-  else macaroon = rawMac
+  const macaroon = Macaroon.importMacaroon(rawMac)
+  const secretBytesArray = stringToBytes(secret)
 
-  const verifier = new MacaroonsVerifier(macaroon)
 
-  if (satisfiers) {
-    if (!Array.isArray(satisfiers)) satisfiers = [satisfiers]
-
-    for (const satisfier of satisfiers) {
-      // first convert the caveat string that satisfy general gives us
-      // into a caveat object and pass that to our satisfier functions
-      verifier.satisfyGeneral((rawCaveat: string) => {
-        const caveat = Caveat.decode(rawCaveat)
-        if (satisfier.condition !== caveat.condition) return false
+  const verify = function (rawCaveat: string) {
+    const caveat = Caveat.decode(rawCaveat)
+    if (satisfiers) {
+      if (!Array.isArray(satisfiers)) satisfiers = [satisfiers]
+      for (const satisfier of satisfiers) {
+        if (satisfier.condition !== caveat.condition) return "not satisifed"
         const valid = satisfier.satisfyFinal(caveat, options)
-        return valid
-      })
+        if (valid) {
+          return null
+        }
+        return "not satisfied"
+      }
     }
-
-    // want to also do previous caveat check
-    const caveats = []
-    for (const { rawValue } of macaroon.caveatPackets) {
-      const caveat = Caveat.decode(rawValue.toString())
-      caveats.push(caveat)
-    }
-
-    if (!verifyCaveats(caveats, satisfiers, options)) return false
   }
-
-  return verifier.isValid(secret)
+  try {
+    macaroon.verify(secretBytesArray, verify)
+  } catch (e) {
+    return false
+  }
+  return true
 }
+

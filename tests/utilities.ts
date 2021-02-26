@@ -1,4 +1,3 @@
-import { MacaroonsBuilder } from 'macaroons.js'
 import { randomBytes } from 'crypto'
 
 import { invoice } from './data'

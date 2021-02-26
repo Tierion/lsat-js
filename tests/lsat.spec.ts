@@ -1,6 +1,5 @@
 import { expect } from 'chai'
 
-import { MacaroonsBuilder } from 'macaroons.js'
 
 import { Caveat, Lsat, parseChallengePart } from '../src'
 import { testChallenges, invoice, goMacaroonChallenge } from './data'
