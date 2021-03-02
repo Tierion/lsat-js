@@ -26,7 +26,7 @@
     "bolt11": "^1.2.7",
     "bsert": "^0.0.10",
     "bufio": "^1.0.6",
-    "macaroon": "git+https://github.com/unional/js-macaroon.git#ts",
+    "macaroon": "git+https://github.com/tierion/js-macaroon.git#ts",
     "uuid": "^3.3.3"
   },
   "devDependencies": {

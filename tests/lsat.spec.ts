@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 
-
+import * as Macaroon from "macaroon";
 import { Caveat, Lsat, parseChallengePart } from '../src'
 import { testChallenges, invoice, goMacaroonChallenge } from './data'
 import { getTestBuilder } from './utilities'
@@ -33,13 +33,15 @@ describe('LSAT Token', () => {
     paymentPreimage = invoice.secret
 
     const builder = getTestBuilder('secret')
-    macaroon = builder
-      .add_first_party_caveat(caveat.encode())
-      .getMacaroon()
-      .serialize()
+    builder.addFirstPartyCaveat(caveat.encode())
+    const builderBin = builder.exportBinary()
+    if (builderBin == null) {
+      return
+    }
+    const macb64 = Macaroon.bytesToBase64(builderBin)
 
-    challenge = `macaroon="${macaroon}", invoice="${invoice.payreq}"`
-    challengeWithSpace = `macaroon="${macaroon}" invoice="${invoice.payreq}"`
+    challenge = `macaroon="${macb64}", invoice="${invoice.payreq}"`
+    challengeWithSpace = `macaroon="${macb64}" invoice="${invoice.payreq}"`
   })
 
   it('should be able to decode from challenge and from header', () => {
@@ -205,11 +207,15 @@ describe('LSAT Token', () => {
       "LSAT's base macaroon should be updated"
     )
 
-    const originalMac = MacaroonsBuilder.deserialize(rawOriginal)
-    const mac = MacaroonsBuilder.deserialize(rawMac)
-
-    expect(mac.caveatPackets.length).to.equal(
-      originalMac.caveatPackets.length + 1,
+    const originalMac = Macaroon.importMacaroon(rawOriginal)
+    const mac = Macaroon.importMacaroon(rawMac)
+    const originalcavs = originalMac._exportAsJSONObjectV2().c
+    const cavs = mac._exportAsJSONObjectV2().c
+    if (cavs == undefined || originalcavs == undefined) {
+      return
+    }
+    expect(cavs).to.equal(
+      originalcavs.length + 1,
       'new macaroon should have one more caveat than the original'
     )
 
