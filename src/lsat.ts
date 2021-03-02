@@ -410,10 +410,14 @@ export class Lsat extends bufio.Struct {
     )
   
     const paymentHash = getIdFromRequest(invoice)
-
-    const identifier = Macaroon.importMacaroon(macaroon)._exportAsJSONObjectV2().i
+    let identifier
+    const mac = Macaroon.importMacaroon(macaroon)
+    identifier = mac._exportAsJSONObjectV2().i
     if (identifier == undefined){
-      throw new Error(`Problem parsing macaroon identifier`)
+      identifier = mac._exportAsJSONObjectV2().i64
+      if (identifier == undefined){
+        throw new Error(`Problem parsing macaroon identifier`)
+      }
     }
 
     return new this({

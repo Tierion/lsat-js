@@ -136,15 +136,14 @@ export function hasCaveat(
   c: Caveat | string
 ): string | boolean | ErrInvalidCaveat {
   const macaroon = Macaroon.importMacaroon(rawMac)._exportAsJSONObjectV2()
-  if (macaroon.c == undefined){
-    return false
-  }
   let caveat: Caveat
   if (typeof c === 'string') caveat = Caveat.decode(c)
   else caveat = c
 
   const condition = caveat.condition
-
+  if (macaroon.c == undefined){
+    return false
+  }
   let value
   macaroon.c.forEach((packet: MacaroonJSONV2.Caveat) => {
     try {

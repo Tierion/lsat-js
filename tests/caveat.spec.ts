@@ -57,8 +57,9 @@ describe('Caveats', () => {
         identifier: 'pubId',
         location: 'location'
       });
+      macaroon.addFirstPartyCaveat(caveat.encode())
 
-      const macBin = macaroon.exportBinary()
+      const macBin = macaroon._exportBinaryV2()
       if (macBin == null) {
         return
       }
@@ -75,7 +76,7 @@ describe('Caveats', () => {
       // check that it will return the value of a newer caveat with the same condition
       const newerCaveat = new Caveat({ condition, value: value - 1 })
       macaroon.addFirstPartyCaveat(newerCaveat.encode())
-      const macBin2 = macaroon.exportBinary()
+      const macBin2 = macaroon._exportBinaryV2()
       if (macBin2 == null) {
         return
       }
@@ -94,7 +95,7 @@ describe('Caveats', () => {
         location: 'location'
       });
 
-      const macBin3 = macaroon.exportBinary()
+      const macBin3 = macaroon._exportBinaryV2()
       if (macBin3 == null) {
         return
       }
