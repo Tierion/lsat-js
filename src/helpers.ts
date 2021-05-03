@@ -1,6 +1,20 @@
 import bolt11 from 'bolt11'
 import assert from 'bsert'
 
+let TextEncoder
+if (typeof window !== 'undefined' && window && window.TextEncoder) {
+  TextEncoder = window.TextEncoder;
+} else {
+  // No window.TextEncoder if it's node.js.
+  const util = require('util');
+  TextEncoder = util.TextEncoder;
+}
+
+export const utf8Encoder = new TextEncoder();
+export const isValue = (x: string | null | undefined) => x !== undefined && x !== null;
+export const stringToBytes = (s: string | null | undefined) => isValue(s) ? utf8Encoder.encode(s) : s;
+
+
 /**
  * @description Given a string, determine if it is in hex encoding or not.
  * @param {string} h - string to evaluate

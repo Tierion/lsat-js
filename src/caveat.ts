@@ -4,22 +4,9 @@
  */
 import assert from 'bsert'
 import { CaveatOptions, Satisfier } from './types'
+import { stringToBytes} from "./helpers";
 import * as Macaroon from 'macaroon'
 import {MacaroonJSONV2} from "macaroon/src/macaroon";
-
-let TextEncoder
-if (typeof window !== 'undefined' && window && window.TextEncoder) {
-  TextEncoder = window.TextEncoder;
-} else {
-  // No window.TextEncoder if it's node.js.
-  const util = require('util');
-  TextEncoder = util.TextEncoder;
-}
-
-const utf8Encoder = new TextEncoder();
-const isValue = (x: string | null | undefined) => x !== undefined && x !== null;
-const stringToBytes = (s: string | null | undefined) => isValue(s) ? utf8Encoder.encode(s) : s;
-
 
 /**
  * @description Creates a new error describing a problem with creating a new caveat
