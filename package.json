@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@types/node": "^13.1.0",
+    "@types/sjcl": "^1.0.29",
     "@types/uuid": "^3.4.6",
     "bolt11": "^1.2.7",
     "bsert": "^0.0.10",

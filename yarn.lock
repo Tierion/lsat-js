@@ -268,6 +268,11 @@
   resolved "https://registry.yarnpkg.com/@types/sinon/-/sinon-7.5.2.tgz#5e2f1d120f07b9cda07e5dedd4f3bf8888fccdb9"
   integrity sha512-T+m89VdXj/eidZyejvmoP9jivXgBDdkOSBVQjU9kF349NEx10QdPNGxHeZUaj1IlJ32/ewdyXJjnJxyxJroYwg==
 
+"@types/sjcl@^1.0.29":
+  version "1.0.29"
+  resolved "https://registry.yarnpkg.com/@types/sjcl/-/sjcl-1.0.29.tgz#bd154ee15421fe24be2db4a20322f38069c1ca71"
+  integrity sha512-gP9M7Oq4xAoDpuueWHeOTasccV4K6iFBEBPbR0tXejKT/e/Gkla0XcJ9REmgSCICt6y8/ubcvXFtiZ4ZLQ6BKA==
+
 "@types/uuid@^3.4.6":
   version "3.4.9"
   resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-3.4.9.tgz#fcf01997bbc9f7c09ae5f91383af076d466594e1"
