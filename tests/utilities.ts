@@ -1,22 +1,22 @@
-import { MacaroonsBuilder } from 'macaroons.js'
 import { randomBytes } from 'crypto'
 
 import { invoice } from './data'
 import { Identifier } from '../src'
 import { getIdFromRequest } from '../src/helpers'
+import * as Macaroon from "macaroon";
 
-export class BuilderInterface extends MacaroonsBuilder {}
-export function getTestBuilder(secret: string): BuilderInterface {
+export function getTestBuilder(secret: string) {
   const paymentHash = getIdFromRequest(invoice.payreq)
 
   const identifier = new Identifier({
     paymentHash: Buffer.from(paymentHash, 'hex'),
     tokenId: randomBytes(32),
   })
-  const builder = new MacaroonsBuilder(
-    'location',
-    secret,
-    identifier.toString()
-  )
-  return builder
+  const macaroon = Macaroon.newMacaroon({
+    version: 1,
+    rootKey: secret,
+    identifier: identifier.toString(),
+    location: 'location'
+  });
+  return macaroon
 }

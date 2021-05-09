@@ -1,11 +1,21 @@
 import { expect } from 'chai'
 
-import { MacaroonsBuilder } from 'macaroons.js'
-
-import { Caveat, Lsat } from '../src'
-import { invoice } from './data'
+import * as Macaroon from "macaroon";
+import { Caveat, Lsat, parseChallengePart } from '../src'
+import { testChallenges, invoice, goMacaroonChallenge } from './data'
 import { getTestBuilder } from './utilities'
 import { getIdFromRequest, decode } from '../src/helpers'
+
+describe('parseChallengePart', () => {
+  it('should handle macaroon with base64 padding', () => {
+    for (const challenge of testChallenges) {
+      expect(() => parseChallengePart(challenge.challenge)).not.to.throw()
+      expect(parseChallengePart(challenge.challenge)).to.equal(
+        challenge.expectedValue
+      )
+    }
+  })
+})
 
 describe('LSAT Token', () => {
   let macaroon: string,
@@ -23,13 +33,15 @@ describe('LSAT Token', () => {
     paymentPreimage = invoice.secret
 
     const builder = getTestBuilder('secret')
-    macaroon = builder
-      .add_first_party_caveat(caveat.encode())
-      .getMacaroon()
-      .serialize()
-
-    challenge = `macaroon="${macaroon}", invoice="${invoice.payreq}"`
-    challengeWithSpace = `macaroon="${macaroon}" invoice="${invoice.payreq}"`
+    builder.addFirstPartyCaveat(caveat.encode())
+    const builderBin = builder._exportBinaryV2()
+    if (builderBin == null) {
+      return
+    }
+    const macb64 = Macaroon.bytesToBase64(builderBin)
+    macaroon = macb64
+    challenge = `macaroon="${macb64}", invoice="${invoice.payreq}"`
+    challengeWithSpace = `macaroon="${macb64}" invoice="${invoice.payreq}"`
   })
 
   it('should be able to decode from challenge and from header', () => {
@@ -54,6 +66,7 @@ describe('LSAT Token', () => {
         test: fromHeader,
       },
     ]
+
     for (const { name, test } of tests) {
       expect(test, `${name} should not have thrown`).to.not.throw()
       const lsat = test()
@@ -85,6 +98,8 @@ describe('LSAT Token', () => {
       missingMacaroon,
       'Should throw when challenge is missing macaroon'
     ).to.throw()
+
+    expect(() => Lsat.fromChallenge(goMacaroonChallenge)).to.not.throw()
   })
 
   it('should throw fromChallenge if challenge is incorrectly encoded', () => {
@@ -187,11 +202,15 @@ describe('LSAT Token', () => {
       "LSAT's base macaroon should be updated"
     )
 
-    const originalMac = MacaroonsBuilder.deserialize(rawOriginal)
-    const mac = MacaroonsBuilder.deserialize(rawMac)
-
-    expect(mac.caveatPackets.length).to.equal(
-      originalMac.caveatPackets.length + 1,
+    const originalMac = Macaroon.importMacaroon(rawOriginal)
+    const mac = Macaroon.importMacaroon(rawMac)
+    const originalcavs = originalMac._exportAsJSONObjectV2().c
+    const cavs = mac._exportAsJSONObjectV2().c
+    if (cavs == undefined || originalcavs == undefined) {
+      return
+    }
+    expect(cavs.length).to.equal(
+      originalcavs.length + 1,
       'new macaroon should have one more caveat than the original'
     )
 

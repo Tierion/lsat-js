@@ -1,6 +1,5 @@
 import { expect } from 'chai'
-import { MacaroonsBuilder } from 'macaroons.js'
-
+import * as Macaroon from 'macaroon'
 import { Caveat, ErrInvalidCaveat, hasCaveat, verifyCaveats } from '../src'
 import { Satisfier } from '../src/types'
 
@@ -52,38 +51,58 @@ describe('Caveats', () => {
 
       const caveat = new Caveat({ condition, value })
 
-      let builder = new MacaroonsBuilder('location', 'secret', 'pubId')
-      builder = builder.add_first_party_caveat(caveat.encode())
-      let macaroon = builder.getMacaroon()
-    
+      const macaroon = Macaroon.newMacaroon({
+        version: 1,
+        rootKey: 'secret',
+        identifier: 'pubId',
+        location: 'location'
+      });
+      macaroon.addFirstPartyCaveat(caveat.encode())
+
+      const macBin = macaroon._exportBinaryV2()
+      if (macBin == null) {
+        return
+      }
+      const macb64 = Macaroon.bytesToBase64(macBin)
       // check that it returns the value for the caveat we're checking for
-      expect(hasCaveat(macaroon.serialize(), caveat)).to.equal(
+      expect(hasCaveat(macb64, caveat)).to.equal(
         caveat.value && caveat.value.toString()
       )
 
       // check that it will return false for a caveat that it doesn't have
       const fakeCaveat = new Caveat({ condition: 'foo', value: 'bar' })
-      expect(hasCaveat(macaroon.serialize(), fakeCaveat)).to.be.false
+      expect(hasCaveat(macb64, fakeCaveat)).to.be.false
 
       // check that it will return the value of a newer caveat with the same condition
       const newerCaveat = new Caveat({ condition, value: value - 1 })
-      builder = builder.add_first_party_caveat(newerCaveat.encode())
-      macaroon = builder.getMacaroon()
+      macaroon.addFirstPartyCaveat(newerCaveat.encode())
+      const macBin2 = macaroon._exportBinaryV2()
+      if (macBin2 == null) {
+        return
+      }
+      const macb642 = Macaroon.bytesToBase64(macBin2)
 
-      expect(hasCaveat(macaroon.serialize(), newerCaveat)).to.equal(
+      expect(hasCaveat(macb642, newerCaveat)).to.equal(
         newerCaveat.value && newerCaveat.value.toString()
       )
     })
 
     it('should throw for an incorrectly encoded caveat', () => {
-      const macaroon = new MacaroonsBuilder(
-        'location',
-        'secret',
-        'pubId'
-      ).getMacaroon()
+      const macaroon = Macaroon.newMacaroon({
+        version: 1,
+        rootKey: 'secret',
+        identifier: 'pubId',
+        location: 'location'
+      });
+
+      const macBin3 = macaroon._exportBinaryV2()
+      if (macBin3 == null) {
+        return
+      }
+      const macb643 = Macaroon.bytesToBase64(macBin3)
 
       const test = (): boolean | ErrInvalidCaveat | string =>
-        hasCaveat(macaroon.serialize(), 'condition:fail')
+        hasCaveat(macb643, 'condition:fail')
 
       expect(test).to.throw(ErrInvalidCaveat)
     })
