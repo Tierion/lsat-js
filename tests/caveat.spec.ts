@@ -132,7 +132,7 @@ describe('Caveats', () => {
     })
 
     it('should verify caveats given a set of satisfiers', () => {
-      const validatesCaveats = (): boolean | Error =>
+      const validatesCaveats = (): boolean =>
         verifyCaveats(caveats, satisfier)
 
       expect(validatesCaveats).to.not.throw()
