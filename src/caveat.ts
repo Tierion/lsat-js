@@ -4,9 +4,9 @@
  */
 import assert from 'bsert'
 import { CaveatOptions, Satisfier } from './types'
-import { stringToBytes} from "./helpers";
+import { stringToBytes } from './helpers'
 import * as Macaroon from 'macaroon'
-import {MacaroonJSONV2} from "macaroon/src/macaroon";
+import { MacaroonJSONV2 } from 'macaroon/src/macaroon'
 
 /**
  * @description Creates a new error describing a problem with creating a new caveat
@@ -128,7 +128,7 @@ export function hasCaveat(
   else caveat = c
 
   const condition = caveat.condition
-  if (macaroon.c == undefined){
+  if (macaroon.c == undefined) {
     return false
   }
   let value
@@ -231,18 +231,17 @@ export function verifyFirstPartyMacaroon(
   const macaroon = Macaroon.importMacaroon(rawMac)
   const secretBytesArray = stringToBytes(secret)
 
-
-  const verify = function (rawCaveat: string) {
+  const verify = function(rawCaveat: string): void | 'not satisfied' | null {
     const caveat = Caveat.decode(rawCaveat)
     if (satisfiers) {
       if (!Array.isArray(satisfiers)) satisfiers = [satisfiers]
       for (const satisfier of satisfiers) {
-        if (satisfier.condition !== caveat.condition) return "not satisifed"
+        if (satisfier.condition !== caveat.condition) return 'not satisfied'
         const valid = satisfier.satisfyFinal(caveat, options)
         if (valid) {
           return null
         }
-        return "not satisfied"
+        return 'not satisfied'
       }
     }
   }
@@ -253,4 +252,3 @@ export function verifyFirstPartyMacaroon(
   }
   return true
 }
-
