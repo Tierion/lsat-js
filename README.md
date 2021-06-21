@@ -129,13 +129,13 @@ function. `satisfyFinal` will test only the last caveat on a macaroon of the mat
 and `satisfyPrevious` compares each caveat of the same condition against each other. This allows
 more flexible attenuation where you can ensure, for example, that every "new" caveat is not less
 restrictive than a previously added one. In the case of an expiration, you probably want to have a satisfier
-that tests that a newer `expiration` is sooner than the first `expiration` added, otherwise, a client
-could add their own expiration further into the future.
+that tests that a newer `expiration` is sooner than the first `expiration` added, otherwise, a client could 
+add their own expiration further into the future.
 
 The exported `Satisfier` interface described in the docs provides more details on creating
 your own satisfiers
 
-#### `verifyFirstPartyMacaroon`
+#### `verifyMacaroonCaveats`
 
 This can only be run by the creator of the macaroon since the signing secret is required to
 verify the macaroon. This will run all necessary checks (requires satisfiers to be passed

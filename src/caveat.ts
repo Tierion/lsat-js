@@ -4,7 +4,7 @@
  */
 import assert from 'bsert'
 import { CaveatOptions, Satisfier } from './types'
-import { stringToBytes } from './helpers'
+
 import * as Macaroon from 'macaroon'
 import { MacaroonJSONV2 } from 'macaroon/src/macaroon'
 
@@ -157,11 +157,9 @@ export function hasCaveat(
  */
 export function verifyCaveats(
   caveats: Caveat[],
-  satisfiers: Satisfier | Satisfier[],
+  satisfiers?: Satisfier | Satisfier[],
   options: object = {}
 ): boolean {
-  assert(satisfiers, 'Must have satisfiers in order to verify caveats')
-
   // if there are no satisfiers then we can just assume everything is verified
   if (!satisfiers) return true
   else if (!Array.isArray(satisfiers)) satisfiers = [satisfiers]
@@ -205,73 +203,6 @@ export function verifyCaveats(
     // check satisfyFinal for the final caveat
     if (!satisfier.satisfyFinal(caveatsList[caveatsList.length - 1], options))
       return false
-  }
-  return true
-}
-
-/**
- * @description verifyFirstPartyMacaroon will check if a macaroon is valid or
- * not based on a set of satisfiers to pass as general caveat verifiers. This will also run
- * against caveat.verifyCaveats to ensure that satisfyPrevious will validate
- * @param {string} macaroon A raw macaroon to run a verifier against
- * @param {String} secret The secret key used to sign the macaroon
- * @param {(Satisfier | Satisfier[])} satisfiers a single satisfier or list of satisfiers used to verify caveats
- * @param {Object} [options] An optional options object that will be passed to the satisfiers.
- * In many circumstances this will be a request object, for example when this is used in a server
- * @returns {boolean}
- */
-export function verifyFirstPartyMacaroon(
-  rawMac: string,
-  secret: string,
-  satisfiers?: Satisfier | Satisfier[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options: any = {}
-): boolean {
-  // if given a raw macaroon string, convert to a Macaroon class
-  const macaroon = Macaroon.importMacaroon(rawMac)
-  const secretBytesArray = stringToBytes(secret)
-
-  const verify = function(rawCaveat: string): void | 'not satisfied' | null {
-    let verified = false;
-    const caveat = Caveat.decode(rawCaveat)
-    if (satisfiers) {
-      if (!Array.isArray(satisfiers)) satisfiers = [satisfiers]
-      for (const satisfier of satisfiers) {
-        if (satisfier.condition !== caveat.condition) continue
-        const valid = satisfier.satisfyFinal(caveat, options)
-        if (valid) {
-          verified = true
-        } 
-        break;
-      }
-    }
-
-    if (!verified) return 'not satisfied'
-
-    // want to also do previous caveat check
-    // so need to collect all caveats and pass them with satisfiers to `verifyCaveats`
-    const caveats = []
-    const rawCaveats = macaroon._exportAsJSONObjectV2()?.c
-    
-    // satisfy possibly undefined check by ts
-    if (!rawCaveats) return null;
-
-    for (const c of rawCaveats) {
-      if (!c.i) continue;
-      const caveat = Caveat.decode(c.i)
-      caveats.push(caveat)
-    }
-
-    if (Array.isArray(satisfiers)) {
-      if (!verifyCaveats(caveats, satisfiers, options)) return 'not satisfied';
-    }
-    return null
-  }
-
-  try {
-    macaroon.verify(secretBytesArray, verify)
-  } catch (e) {
-    return false
   }
   return true
 }

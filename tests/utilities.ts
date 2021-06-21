@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import { invoice } from './data'
 import { Identifier } from '../src'
 import { getIdFromRequest } from '../src/helpers'
-import * as Macaroon from "macaroon";
+import * as Macaroon from 'macaroon'
 
 export function getTestBuilder(secret: string) {
   const paymentHash = getIdFromRequest(invoice.payreq)
@@ -16,7 +16,7 @@ export function getTestBuilder(secret: string) {
     version: 1,
     rootKey: secret,
     identifier: identifier.toString(),
-    location: 'location'
-  });
+    location: 'location',
+  })
   return macaroon
 }
