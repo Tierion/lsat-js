@@ -1,5 +1,7 @@
 import bolt11 from 'bolt11'
 import assert from 'bsert'
+import { MacaroonClass } from './types';
+import * as Macaroon from 'macaroon'
 
 let TextEncoder
 if (typeof window !== 'undefined' && window && window.TextEncoder) {
@@ -11,8 +13,8 @@ if (typeof window !== 'undefined' && window && window.TextEncoder) {
 }
 
 export const utf8Encoder = new TextEncoder();
-export const isValue = (x: string | null | undefined) => x !== undefined && x !== null;
-export const stringToBytes = (s: string | null | undefined) => isValue(s) ? utf8Encoder.encode(s) : s;
+export const isValue = (x: string | null | undefined): boolean => x !== undefined && x !== null;
+export const stringToBytes = (s: string | null | undefined): Uint8Array => isValue(s) ? utf8Encoder.encode(s) : s;
 
 
 /**

@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import * as Macaroon from 'macaroon'
 import { Caveat, ErrInvalidCaveat, hasCaveat, verifyCaveats } from '../src'
+
 import { Satisfier } from '../src/types'
 
 describe('Caveats', () => {
@@ -55,8 +56,8 @@ describe('Caveats', () => {
         version: 1,
         rootKey: 'secret',
         identifier: 'pubId',
-        location: 'location'
-      });
+        location: 'location',
+      })
       macaroon.addFirstPartyCaveat(caveat.encode())
 
       const macBin = macaroon._exportBinaryV2()
@@ -92,8 +93,8 @@ describe('Caveats', () => {
         version: 1,
         rootKey: 'secret',
         identifier: 'pubId',
-        location: 'location'
-      });
+        location: 'location',
+      })
 
       const macBin3 = macaroon._exportBinaryV2()
       if (macBin3 == null) {
@@ -112,8 +113,8 @@ describe('Caveats', () => {
     let caveat1: Caveat,
       caveat2: Caveat,
       caveat3: Caveat,
-      caveats: Caveat[],
-      satisfier: Satisfier
+      satisfier: Satisfier,
+      caveats: Caveat[]
 
     beforeEach(() => {
       caveat1 = new Caveat({ condition: '1', value: 'test' })
@@ -130,10 +131,8 @@ describe('Caveats', () => {
         satisfyFinal: (): boolean => true,
       }
     })
-
     it('should verify caveats given a set of satisfiers', () => {
-      const validatesCaveats = (): boolean | Error =>
-        verifyCaveats(caveats, satisfier)
+      const validatesCaveats = (): boolean => verifyCaveats(caveats, satisfier)
 
       expect(validatesCaveats).to.not.throw()
       expect(validatesCaveats()).to.be.true
@@ -163,29 +162,42 @@ describe('Caveats', () => {
     })
 
     it('should be able to use an options object for verification', () => {
-      const testCaveat = new Caveat({condition: 'middlename', value: 'danger'})
+      const testCaveat = new Caveat({
+        condition: 'middlename',
+        value: 'danger',
+      })
       caveats.push(testCaveat)
       satisfier = {
         condition: testCaveat.condition,
         // dummy satisfyPrevious function to test that it tests caveat lists correctly
         satisfyPrevious: (prev, cur, options): boolean =>
           prev.value.toString().includes('test') &&
-          cur.value.toString().includes('test') && options.body.middlename === testCaveat.value,
+          cur.value.toString().includes('test') &&
+          options.body.middlename === testCaveat.value,
         satisfyFinal: (caveat, options): boolean => {
-          if (caveat.condition === testCaveat.condition && options?.body.middlename === testCaveat.value) 
+          if (
+            caveat.condition === testCaveat.condition &&
+            options.body.middlename === testCaveat.value
+          )
             return true
-          
+
           return false
         },
       }
 
-      let isValid = verifyCaveats(caveats, satisfier, {body: { middlename: 'bob' }})
-      
-      expect(isValid, 'should fail when given an invalid options object').to.be.false
-      
-      isValid = verifyCaveats(caveats, satisfier, {body: { middlename: testCaveat.value }})
+      let isValid = verifyCaveats(caveats, satisfier, {
+        body: { middlename: 'bob' },
+      })
 
-      expect(isValid, 'should pass when given a valid options object').to.be.true
+      expect(isValid, 'should fail when given an invalid options object').to.be
+        .false
+
+      isValid = verifyCaveats(caveats, satisfier, {
+        body: { middlename: testCaveat.value },
+      })
+
+      expect(isValid, 'should pass when given a valid options object').to.be
+        .true
     })
   })
 })
