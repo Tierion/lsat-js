@@ -29,7 +29,7 @@ export function parseChallengePart(challenge:string): string {
 
   assert(
     macaroon[0] === '"' && macaroon[macaroon.length -1] === '"', 
-    'Incorecctly encoded macaroon challenge, must be enclosed in double quotes.'
+    'Incorectly encoded macaroon challenge, must be enclosed in double quotes.'
   )
   macaroon = macaroon.slice(1, macaroon.length - 1)
   return macaroon
