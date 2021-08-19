@@ -55,7 +55,9 @@ export function verifyMacaroonCaveats(
     macaroon.verify(secretBytesArray, () => null)
 
     const caveats = getCaveatsFromMacaroon(rawMac)
-    if (!caveats.length) return true;
+  
+    if (satisfiers && !Array.isArray(satisfiers)) satisfiers = [satisfiers] 
+    if (!caveats.length && (!satisfiers || !satisfiers.length)) return true;
     // check caveats against satisfiers, including previous caveat checks
     return verifyCaveats(caveats, satisfiers, options)
   } catch (e) {
