@@ -67,7 +67,7 @@ describe('macaroon', () => {
       expect(isValid).to.be.true
     })
 
-    it.only('should run verifyCaveats with all caveats and satisfiers', () => {
+    it('should run verifyCaveats with all caveats and satisfiers', () => {
       const testCaveats = [caveat1, caveat2]
       testCaveats.forEach(c => mac.addFirstPartyCaveat(c.encode()))
       const spy = sinon.spy(caveat, 'verifyCaveats')
