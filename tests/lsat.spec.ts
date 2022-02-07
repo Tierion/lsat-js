@@ -2,13 +2,13 @@ import { expect } from 'chai'
 
 import * as Macaroon from "macaroon";
 import { Caveat, Lsat, parseChallengePart } from '../src'
-import { testChallenges, invoice, goMacaroonChallenge } from './data'
+import { testChallengeParts, invoice, testChallenges, testChallengeErrors } from './data'
 import { getTestBuilder } from './utilities'
-import { getIdFromRequest, decode } from '../src/helpers'
+import { decode } from '../src/helpers'
 
 describe('parseChallengePart', () => {
   it('should handle macaroon with base64 padding', () => {
-    for (const challenge of testChallenges) {
+    for (const challenge of testChallengeParts) {
       expect(() => parseChallengePart(challenge.challenge)).not.to.throw()
       expect(parseChallengePart(challenge.challenge)).to.equal(
         challenge.expectedValue
@@ -19,16 +19,13 @@ describe('parseChallengePart', () => {
 
 describe('LSAT Token', () => {
   let macaroon: string,
-    paymentHash: string,
     paymentPreimage: string,
     expiration: number,
-    challenge: string,
-    challengeWithSpace: string
+    challenge: string
 
   beforeEach(() => {
     expiration = Date.now() + 1000
     const caveat = new Caveat({ condition: 'expiration', value: expiration })
-    paymentHash = getIdFromRequest(invoice.payreq)
 
     paymentPreimage = invoice.secret
 
@@ -41,36 +38,14 @@ describe('LSAT Token', () => {
     const macb64 = Macaroon.bytesToBase64(builderBin)
     macaroon = macb64
     challenge = `macaroon="${macb64}", invoice="${invoice.payreq}"`
-    challengeWithSpace = `macaroon="${macb64}" invoice="${invoice.payreq}"`
   })
 
-  it('should be able to decode from challenge and from header', () => {
-    const header = `LSAT ${challenge}`
-
-    const fromChallenge = (): Lsat => Lsat.fromChallenge(challenge)
-    const fromChallengeWithSpace = (): Lsat =>
-      Lsat.fromChallenge(challengeWithSpace)
-    const fromHeader = (): Lsat => Lsat.fromHeader(header)
-
-    const tests = [
-      {
-        name: 'fromChallenge',
-        test: fromChallenge,
-      },
-      {
-        name: 'fromChallengeWithSpace',
-        test: fromChallengeWithSpace,
-      },
-      {
-        name: 'fromHeader',
-        test: fromHeader,
-      },
-    ]
-
-    for (const { name, test } of tests) {
-      expect(test, `${name} should not have thrown`).to.not.throw()
-      const lsat = test()
-
+  it('should be able to decode lsat challenges', () => {
+    for (const {name, challenge, macaroon, paymentHash, expiration} of testChallenges) {
+      const fromChallenge = (): Lsat => Lsat.fromChallenge(challenge)
+      
+      expect(fromChallenge, `${name} should not have thrown`).to.not.throw()
+      const lsat = fromChallenge()
       expect(lsat.baseMacaroon).to.equal(
         macaroon,
         `macaroon from ${name} LSAT did not match`
@@ -79,59 +54,31 @@ describe('LSAT Token', () => {
         paymentHash,
         `paymentHash from ${name} LSAT did not match`
       )
-      expect(lsat.validUntil).to.equal(
-        expiration,
-        `expiration from ${name} LSAT did not match`
-      )
-    }
-
-    const missingInvoice = (): Lsat =>
-      Lsat.fromChallenge(`macaroon="${macaroon}"`)
-    const missingMacaroon = (): Lsat =>
-      Lsat.fromChallenge(`invoice="${invoice}"`)
-
-    expect(
-      missingInvoice,
-      'Should throw when challenge is missing invoice'
-    ).to.throw()
-    expect(
-      missingMacaroon,
-      'Should throw when challenge is missing macaroon'
-    ).to.throw()
-
-    expect(() => Lsat.fromChallenge(goMacaroonChallenge)).to.not.throw()
-  })
-
-  it('should throw fromChallenge if challenge is incorrectly encoded', () => {
-    const { payreq } = invoice
-    const incorrectEncodings = [
-      {
-        challenge: `macaroon=${macaroon}, invoice="${payreq}"`,
-        name: 'macaroon not in double quotes',
-      },
-      {
-        challenge: `macaroon="${macaroon}" invoice=${payreq}`,
-        name: 'invoice not in double quotes',
-      },
-      {
-        challenge: `macaroon=${macaroon} invoice=${payreq}`,
-        name: 'neither part in double quotes',
-      },
-      {
-        challenge: `macaroon="${macaroon}"`,
-        name: 'missing invoice',
-      },
-      {
-        challenge: `invoice="${payreq}"`,
-        name: 'missing macaroon',
-      },
-    ]
-
-    for (const c of incorrectEncodings) {
-      const test = (): Lsat => Lsat.fromChallenge(c.challenge)
-      expect(test, `Should have thrown an error with ${c.name}`).to.throw()
+      if (expiration)
+        expect(lsat.validUntil).to.equal(
+          expiration,
+          `expiration from ${name} LSAT did not match`
+        )
+      else 
+        expect(lsat.validUntil).to.equal(0)
     }
   })
+
+  it('should be able to decode header challenges', () => {
+    for (const {name, challenge} of testChallenges) {
+      const header = `LSAT ${challenge}`
+      const fromHeader = (): Lsat => Lsat.fromHeader(header)
+      expect(fromHeader, `${name} should not have thrown`).to.not.throw()
+    }
+  })
+
+  it('should fail on incorrectly encoded challenges', () => {
+    for (const {name, challenge, error} of testChallengeErrors) {
+      const fromChallenge = (): Lsat => Lsat.fromChallenge(challenge)
+      expect(fromChallenge, `${name} should not have thrown`).to.throw(error)
+    }
+  })
+  
   it('should be able to check expiration to see if expired', () => {
     const lsat = Lsat.fromChallenge(challenge)
     expect(lsat.isExpired()).to.be.false

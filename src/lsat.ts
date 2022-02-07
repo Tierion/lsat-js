@@ -20,7 +20,7 @@ type LsatJson = {
 export function parseChallengePart(challenge:string): string {
   let macaroon     
   const separatorIndex = challenge.indexOf('=')
-  assert(separatorIndex > -1, 'Incorrectly encoded macaroon challenge. Missing "=" separator.')
+  assert(separatorIndex > -1, 'Incorrectly encoded challenge. Missing "=" separator.')
   
   // slice off `[challengeType]=`
   const splitIndex = challenge.length - 1 - separatorIndex;
@@ -29,7 +29,7 @@ export function parseChallengePart(challenge:string): string {
 
   assert(
     macaroon[0] === '"' && macaroon[macaroon.length -1] === '"', 
-    'Incorectly encoded macaroon challenge, must be enclosed in double quotes.'
+    'Incorectly encoded challenge, challenges must be enclosed in double quotes.'
   )
   macaroon = macaroon.slice(1, macaroon.length - 1)
   return macaroon

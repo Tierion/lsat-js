@@ -1,11 +1,11 @@
 import { randomBytes } from 'crypto'
 
 import { invoice } from './data'
-import { Identifier } from '../src'
+import { Identifier, MacaroonClass } from '../src'
 import { getIdFromRequest } from '../src/helpers'
 import * as Macaroon from 'macaroon'
 
-export function getTestBuilder(secret: string) {
+export function getTestBuilder(secret: string): MacaroonClass {
   const paymentHash = getIdFromRequest(invoice.payreq)
 
   const identifier = new Identifier({
