@@ -69,7 +69,6 @@ export class Caveat {
     )
     this.condition = options.condition
 
-    assert(options.value, 'Requires a value to create a caveat')
     options.value.toString()
     this.value = options.value
 
