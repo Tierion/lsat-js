@@ -293,7 +293,7 @@ export class Lsat extends bufio.Struct {
         )
         this.invoiceAmount = tokens || 0
         this.invoice = invoice
-      } catch (e) {
+      } catch (e:any) {
         throw new Error(`Problem adding invoice data to LSAT: ${e.message}`)
       }
   }
@@ -315,7 +315,7 @@ export class Lsat extends bufio.Struct {
         )
       }
       id = Identifier.fromString(identifier)
-    } catch (e) {
+    } catch (e:any) {
       throw new Error(
         `Unexpected encoding for macaroon identifier: ${e.message}`
       )
@@ -386,7 +386,7 @@ export class Lsat extends bufio.Struct {
       if (!macaroon.length && c.indexOf(macChallenge) > -1) {
         try {
           macaroon = parseChallengePart(c)
-        } catch (e) {
+        } catch (e:any) {
           throw new Error(`Problem parsing macaroon challenge: ${e.message}`)
         }
       }
@@ -395,7 +395,7 @@ export class Lsat extends bufio.Struct {
       if (!invoice.length && c.indexOf(invoiceChallenge) > -1) {
         try {
           invoice = parseChallengePart(c)
-        } catch (e) {
+        } catch (e:any) {
           throw new Error(`Problem parsing macaroon challenge: ${e.message}`)
         }
       }
