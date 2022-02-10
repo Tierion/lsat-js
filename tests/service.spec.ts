@@ -7,6 +7,7 @@ import {
   InvalidCapabilitiesError,
   createNewCapabilitiesCaveat,
   SERVICE_CAPABILITIES_SUFFIX,
+  decodeCapabilitiesValue,
 } from '../src/service'
 
 describe('services', () => {
@@ -123,5 +124,13 @@ describe('services', () => {
         expect(caveat.value).to.equal(t.capabilities)
       }
     }
+  })
+
+  it('can decode capabilities caveat value', () => {
+    // @ts-expect-error
+    expect(() => decodeCapabilitiesValue(3)).to.throw(InvalidCapabilitiesError)
+    const value = 'add, subtract,multiply'
+    const expected = ['add', 'subtract', 'multiply']
+    expect(decodeCapabilitiesValue(value)).to.have.all.members(expected)
   })
 })

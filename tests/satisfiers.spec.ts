@@ -6,6 +6,9 @@ import {
   SERVICES_CAVEAT_CONDITION,
   InvalidServicesError,
   createServicesSatisfier,
+  SERVICE_CAPABILITIES_SUFFIX,
+  createCapabilitiesSatisfier,
+  InvalidCapabilitiesError,
 } from '../src'
 import { Satisfier } from '../src/types'
 
@@ -117,6 +120,58 @@ describe('satisfiers', () => {
       const caveats = [firstCaveat, secondCaveat]
       expect(runTest(caveats, 'foo')).to.be.true
       expect(runTest(caveats, 'baz')).to.be.false
+    })
+  })
+
+  describe('capabilities satisfier', () => {
+    let firstCaveat: Caveat, secondCaveat: Caveat
+    const service = 'lightning'
+
+    beforeEach(() => {
+      firstCaveat = Caveat.decode(
+        `${service}${SERVICE_CAPABILITIES_SUFFIX}=read,write`
+      )
+      secondCaveat = Caveat.decode(
+        `${service}${SERVICE_CAPABILITIES_SUFFIX}=read`
+      )
+    })
+
+    const runTest = (
+      caveats: Caveat[],
+      targetCapability: string
+    ): boolean | Error => {
+      const satisfier = createCapabilitiesSatisfier(service, targetCapability)
+      return verifyCaveats(caveats, satisfier)
+    }
+
+    it('should fail to create satisfier on invalid inputs', () => {
+      const invalidInputs = [12, { foo: 'bar' }, ['a', 'b', 'c']]
+      for (const target of invalidInputs) {
+        // @ts-expect-error
+        expect(() => createCapabilitiesSatisfier(target, 'test')).to.throw(
+          InvalidCapabilitiesError
+        )
+        // @ts-expect-error
+        expect(() => createCapabilitiesSatisfier('test', target)).to.throw(
+          InvalidCapabilitiesError
+        )
+      }
+    })
+
+    it('should not allow any capabilities that were not previously allowed', () => {
+      // const invalidCaveat = Caveat.decode(`${SERVICES_CAVEAT_CONDITION}=baz:0`)
+      const caveats = [secondCaveat, firstCaveat]
+      expect(runTest(caveats, 'foo')).to.be.false
+    })
+
+    it('should validate for the specified target capabilities', () => {
+      const caveats = [firstCaveat, secondCaveat]
+      expect(runTest(caveats, 'read')).to.be.true
+      // second caveat only has read which is an attenuation with restricted permissions
+      // so doesn't have write
+      expect(runTest(caveats, 'write')).to.be.false
+      // only the first caveat means it has both read and write
+      expect(runTest([firstCaveat], 'write')).to.be.true
     })
   })
 })

@@ -8,19 +8,56 @@
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2018,
-    "sourceType": "module"
+    "sourceType": "module",
+    "project": ["./tsconfig.json"]
   },
   "rules": {
     "class-methods-use-this": 0,
     "import/no-named-as-default": 0,
     "require-atomic-updates": "warn",
     "no-unused-vars": ["warn", { "varsIgnorePattern": "^_" }],
-    "@typescript-eslint/no-unused-vars": ["warn", { "varsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { "varsIgnorePattern": "^_" }
+    ],
     "@typescript-eslint/no-var-requires": 0,
-    "@typescript-eslint/camelcase": [
+    "@typescript-eslint/naming-convention": [
       "error",
       {
-        "properties": "never"
+        "selector": "default",
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow"
+      },
+
+      {
+        "selector": "variable",
+        "format": ["camelCase", "UPPER_CASE"]
+      },
+      {
+        "selector": "parameter",
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow"
+      },
+
+      {
+        "selector": "memberLike",
+        "modifiers": ["private"],
+        "format": ["camelCase"],
+        "leadingUnderscore": "require"
+      },
+
+      {
+        "selector": "typeLike",
+        "format": ["PascalCase"]
+      },
+
+      {
+        "selector": "variable",
+        "format": ["PascalCase"],
+        "filter": {
+          "regex": "TextEncoder",
+          "match": true
+        }
       }
     ],
     "no-console": "error"

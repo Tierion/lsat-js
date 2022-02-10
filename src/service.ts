@@ -143,3 +143,11 @@ export const createNewCapabilitiesCaveat = (
     comp: '=',
   })
 }
+
+export const decodeCapabilitiesValue = (value: string): string[] => {
+  if (typeof value !== 'string') throw new InvalidCapabilitiesError()
+  return value
+    .toString()
+    .split(',')
+    .map((s: string) => s.trim())
+}
