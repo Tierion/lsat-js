@@ -1,5 +1,12 @@
 import { expect } from 'chai'
-import { Caveat, expirationSatisfier, verifyCaveats } from '../src'
+import {
+  Caveat,
+  expirationSatisfier,
+  verifyCaveats,
+  SERVICES_CAVEAT_CONDITION,
+  InvalidServicesError,
+  createServicesSatisfier,
+} from '../src'
 import { Satisfier } from '../src/types'
 
 describe('satisfiers', () => {
@@ -50,6 +57,66 @@ describe('satisfiers', () => {
         expectFailed,
         'Expected caveats w/ decreasingly restrictive expirations to fail'
       ).to.be.false
+    })
+  })
+
+  describe('services satisfier', () => {
+    let firstCaveat: Caveat, secondCaveat: Caveat
+
+    beforeEach(() => {
+      firstCaveat = Caveat.decode(`${SERVICES_CAVEAT_CONDITION}=foo:0,bar:1`)
+      secondCaveat = Caveat.decode(`${SERVICES_CAVEAT_CONDITION}=foo:1,bar:1`)
+    })
+
+    const runTest = (
+      caveats: Caveat[],
+      targetService: string
+    ): boolean | Error => {
+      const satisfier = createServicesSatisfier(targetService)
+      return verifyCaveats(caveats, satisfier)
+    }
+
+    it('should fail to create satisfier on invalid target service', () => {
+      const invalidTargetServices = [12, { foo: 'bar' }, ['a', 'b', 'c']]
+      for (const target of invalidTargetServices) {
+        // @ts-expect-error
+        expect(() => createServicesSatisfier(target)).to.throw(
+          InvalidServicesError
+        )
+      }
+    })
+
+    it('should throw InvalidServicesError if caveats are incorrect', () => {
+      const invalidCaveatValue = Caveat.decode(
+        `${SERVICES_CAVEAT_CONDITION}=noTier`
+      )
+
+      expect(
+        () => runTest([invalidCaveatValue, firstCaveat], 'foo'),
+        'invalid caveat value'
+      ).to.throw(InvalidServicesError)
+      expect(
+        () => runTest([firstCaveat, invalidCaveatValue], 'foo'),
+        'invalid caveat value'
+      ).to.throw(InvalidServicesError)
+    })
+
+    it('should not allow any services that were not previously allowed', () => {
+      const invalidCaveat = Caveat.decode(`${SERVICES_CAVEAT_CONDITION}=baz:0`)
+      const caveats = [firstCaveat, invalidCaveat]
+      expect(runTest(caveats, 'foo')).to.be.false
+    })
+
+    it('should validate only increasingly restrictive (higher) service tiers', () => {
+      // order matters
+      const caveats = [secondCaveat, firstCaveat]
+      expect(runTest(caveats, 'foo')).to.be.false
+    })
+
+    it('should validate for the specified target service', () => {
+      const caveats = [firstCaveat, secondCaveat]
+      expect(runTest(caveats, 'foo')).to.be.true
+      expect(runTest(caveats, 'baz')).to.be.false
     })
   })
 })

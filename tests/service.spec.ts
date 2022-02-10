@@ -9,7 +9,7 @@ import {
   SERVICE_CAPABILITIES_SUFFIX,
 } from '../src/service'
 
-describe.only('services', () => {
+describe('services', () => {
   it('can encode and decode service caveats', () => {
     const tests = [
       {

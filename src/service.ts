@@ -70,6 +70,9 @@ export class Service extends bufio.Struct {
   }
 }
 
+// the condition value in a caveat for services
+export const SERVICES_CAVEAT_CONDITION = 'services'
+
 /**
  *
  * @param {string} s - raw services string of format `name:tier,name:tier`

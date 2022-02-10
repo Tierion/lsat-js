@@ -3,7 +3,13 @@
  * ones that don't require the request object in a server as these can be used anywhere.
  */
 
-import { Satisfier, Caveat } from '.'
+import {
+  Satisfier,
+  Caveat,
+  InvalidServicesError,
+  SERVICES_CAVEAT_CONDITION,
+  decodeServicesCaveat,
+} from '.'
 
 /**
  * @description A satisfier for validating expiration caveats on macaroon. Used in the exported
@@ -27,4 +33,44 @@ export const expirationSatisfier: Satisfier = {
     if (caveat.value < Date.now()) return false
     return true
   },
+}
+
+export const createServicesSatisfier = (targetService: string): Satisfier => {
+  // validate targetService
+  if (typeof targetService !== 'string') throw new InvalidServicesError()
+
+  return {
+    condition: SERVICES_CAVEAT_CONDITION,
+    satisfyPrevious: (prev: Caveat, curr: Caveat): boolean => {
+      const prevServices = decodeServicesCaveat(prev.value.toString())
+      const currentServices = decodeServicesCaveat(curr.value.toString())
+      let previouslyAllowed = new Map()
+
+      // making typescript happy
+      if (!Array.isArray(prevServices) || !Array.isArray(currentServices))
+        throw new InvalidServicesError()
+
+      previouslyAllowed = prevServices.reduce(
+        (prev, current) => prev.set(current.name, current.tier),
+        previouslyAllowed
+      )
+      for (const service of currentServices) {
+        if (!previouslyAllowed.has(service.name)) return false
+        const prevTier: number = previouslyAllowed.get(service.name)
+        if (prevTier > service.tier) return false
+      }
+
+      return true
+    },
+    satisfyFinal: (caveat: Caveat): boolean => {
+      const services = decodeServicesCaveat(caveat.value.toString())
+      // making typescript happy
+      if (!Array.isArray(services)) throw new InvalidServicesError()
+
+      for (const service of services) {
+        if (service.name === targetService) return true
+      }
+      return false
+    },
+  }
 }
