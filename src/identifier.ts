@@ -2,6 +2,7 @@ const assert = require('assert')
 const bufio = require('bufio')
 import crypto from 'crypto'
 import uuidv4 from 'uuid/v4'
+import * as Macaroon from 'macaroon'
 
 import { IdentifierOptions } from './types'
 
@@ -88,7 +89,11 @@ export class Identifier extends bufio.Struct {
   }
 
   static fromString(str: string): Identifier {
-    return new this().fromHex(str)
+    try {
+      return new this().fromHex(str)
+    } catch (e) {
+      return new this().fromBase64(str)
+    }
   }
 
   /**
@@ -136,4 +141,16 @@ export class Identifier extends bufio.Struct {
         throw new ErrUnknownVersion(this.version)
     }
   }
+}
+
+export const decodeIdentifierFromMacaroon = (raw: string): string => {
+  const macaroon = Macaroon.importMacaroon(raw)
+  let identifier = macaroon._exportAsJSONObjectV2().i
+  if (identifier == undefined) {
+    identifier = macaroon._exportAsJSONObjectV2().i64
+    if (identifier == undefined) {
+      throw new Error(`Problem parsing macaroon identifier`)
+    }
+  }
+  return identifier
 }

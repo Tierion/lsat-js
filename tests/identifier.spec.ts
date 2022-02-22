@@ -6,7 +6,9 @@ import {
   LATEST_VERSION,
   TOKEN_ID_SIZE,
   ErrUnknownVersion,
+  decodeIdentifierFromMacaroon,
 } from '../src'
+import { testChallenges } from './data'
 
 describe('Macaroon Identifier', () => {
   it('should properly serialize identifier of known version', () => {
@@ -32,5 +34,12 @@ describe('Macaroon Identifier', () => {
 
     const encodeId = (): Identifier => new Identifier(options)
     expect(encodeId).to.throw(ErrUnknownVersion, options.version.toString())
+  })
+
+  it('can decode from different macaroon types', () => {
+    for (const { macaroon } of testChallenges) {
+      const id = decodeIdentifierFromMacaroon(macaroon)
+      Identifier.fromString(id)
+    }
   })
 })
