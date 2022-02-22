@@ -1,8 +1,18 @@
 import { expect } from 'chai'
 
-import * as Macaroon from "macaroon";
-import { Caveat, Lsat, parseChallengePart } from '../src'
-import { testChallengeParts, invoice, testChallenges, testChallengeErrors } from './data'
+import * as Macaroon from 'macaroon'
+import {
+  Caveat,
+  decodeIdentifierFromMacaroon,
+  Lsat,
+  parseChallengePart,
+} from '../src'
+import {
+  testChallengeParts,
+  invoice,
+  testChallenges,
+  testChallengeErrors,
+} from './data'
 import { getTestBuilder } from './utilities'
 import { decode } from '../src/helpers'
 
@@ -41,9 +51,15 @@ describe('LSAT Token', () => {
   })
 
   it('should be able to decode lsat challenges', () => {
-    for (const {name, challenge, macaroon, paymentHash, expiration} of testChallenges) {
+    for (const {
+      name,
+      challenge,
+      macaroon,
+      paymentHash,
+      expiration,
+    } of testChallenges) {
       const fromChallenge = (): Lsat => Lsat.fromChallenge(challenge)
-      
+
       expect(fromChallenge, `${name} should not have thrown`).to.not.throw()
       const lsat = fromChallenge()
       expect(lsat.baseMacaroon).to.equal(
@@ -59,13 +75,12 @@ describe('LSAT Token', () => {
           expiration,
           `expiration from ${name} LSAT did not match`
         )
-      else 
-        expect(lsat.validUntil).to.equal(0)
+      else expect(lsat.validUntil).to.equal(0)
     }
   })
 
   it('should be able to decode header challenges', () => {
-    for (const {name, challenge} of testChallenges) {
+    for (const { name, challenge } of testChallenges) {
       const header = `LSAT ${challenge}`
       const fromHeader = (): Lsat => Lsat.fromHeader(header)
       expect(fromHeader, `${name} should not have thrown`).to.not.throw()
@@ -73,12 +88,12 @@ describe('LSAT Token', () => {
   })
 
   it('should fail on incorrectly encoded challenges', () => {
-    for (const {name, challenge, error} of testChallengeErrors) {
+    for (const { name, challenge, error } of testChallengeErrors) {
       const fromChallenge = (): Lsat => Lsat.fromChallenge(challenge)
       expect(fromChallenge, `${name} should not have thrown`).to.throw(error)
     }
   })
-  
+
   it('should be able to check expiration to see if expired', () => {
     const lsat = Lsat.fromChallenge(challenge)
     expect(lsat.isExpired()).to.be.false
@@ -227,5 +242,12 @@ describe('LSAT Token', () => {
 
     const addInvalidInv = (): void => lsat.addInvoice('12345')
     expect(addInvalidInv).to.throw()
+  })
+
+  it('test macaroon versions', () => {
+    for (const { macaroon, name } of testChallenges) {
+      const test = () => Lsat.fromMacaroon(macaroon)
+      expect(test, `${name} should not have thrown`).to.not.throw()
+    }
   })
 })

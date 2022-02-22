@@ -4,7 +4,7 @@ const bufio = require('bufio')
 import crypto from 'crypto'
 import * as Macaroon from 'macaroon'
 
-import { Caveat, Identifier } from '.'
+import { Caveat, decodeIdentifierFromMacaroon, Identifier } from '.'
 import { LsatOptions } from './types'
 import { isHex, getIdFromRequest, decode } from './helpers'
 
@@ -306,14 +306,9 @@ export class Lsat extends bufio.Struct {
    */
   static fromMacaroon(macaroon: string, invoice?: string): Lsat {
     assert(typeof macaroon === 'string', 'Requires a raw macaroon string for macaroon to generate LSAT')
-    const identifier = Macaroon.importMacaroon(macaroon)._exportAsJSONObjectV2().i
-    let id: Identifier
+    let id: Identifier, identifier: string
     try {
-      if (identifier == undefined) {
-        throw new Error(
-            `macaroon identifier undefined`
-        )
-      }
+      identifier = decodeIdentifierFromMacaroon(macaroon)
       id = Identifier.fromString(identifier)
     } catch (e:any) {
       throw new Error(
@@ -410,15 +405,7 @@ export class Lsat extends bufio.Struct {
     )
   
     const paymentHash = getIdFromRequest(invoice)
-    let identifier
-    const mac = Macaroon.importMacaroon(macaroon)
-    identifier = mac._exportAsJSONObjectV2().i
-    if (identifier == undefined){
-      identifier = mac._exportAsJSONObjectV2().i64
-      if (identifier == undefined){
-        throw new Error(`Problem parsing macaroon identifier`)
-      }
-    }
+    const identifier = decodeIdentifierFromMacaroon(macaroon)
 
     return new this({
       id: identifier,
