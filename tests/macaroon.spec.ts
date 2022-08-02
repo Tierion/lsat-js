@@ -92,4 +92,16 @@ describe('macaroon', () => {
       expect(isValid).to.be.false
     })
   })
+
+  describe('getRawMacaroon', () => {
+    it('should convert a macaroon to base64', () => {
+      // built-in Macaroon function doesn't handle slashes properly
+      // so want to test with one that has them
+      const original =
+        'AgEEbHNhdAJCAACpIed4t8z8YTUNlAsUMqi1cYNA0kTYT6ajy0FpYySS/c/Lpm7rxB1Qyskte0aSEf3Ze2buI3yl2wmZtVgMZjzVAAIWc2VydmljZXM9c3BoaW54X21lbWU6MAACJXNwaGlueF9tZW1lX2NhcGFiaWxpdGllcz1sYXJnZV91cGxvYWQAAhZsYXJnZV91cGxvYWRfbWF4X21iPTMyAAAGIEFPRpVD8ryeKlJsfMvtufUogBiUwvz/h9KP/FC6gHg8'
+      
+      const mac = Macaroon.importMacaroon(original)
+      expect(getRawMacaroon(mac)).to.equal(original)
+    })
+  })
 })

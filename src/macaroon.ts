@@ -2,6 +2,8 @@ import { Caveat, verifyCaveats } from "./caveat";
 import { stringToBytes } from './helpers'
 import * as Macaroon from 'macaroon'
 import { MacaroonClass, Satisfier } from "./types";
+import { bytesToBase64 } from "macaroon/src/macaroon";
+import { encode, encodeURLSafe } from "@stablelib/base64";
 
 /**
  * @description utility function to get an array of caveat instances from
@@ -65,6 +67,16 @@ export function verifyMacaroonCaveats(
   }
 }
 
-export function getRawMacaroon(mac: MacaroonClass): string {
-  return Macaroon.bytesToBase64(mac._exportBinaryV2())
+/**
+ * A convenience wrapper for getting a base64 encoded string. 
+ * We unfortunately can't use the built in tool `Macaroon#bytesToBase64`
+ * because it only supports url safe base64 encoding which isn't compatible with
+ * aperture
+ * @param mac MacaroonClass - a macaroon to convert to raw base64
+ * @returns base64 string
+ */
+export function getRawMacaroon(mac: MacaroonClass, urlSafe=false): string {
+  const bytes = mac._exportBinaryV2()
+  if (urlSafe) return encodeURLSafe(bytes)
+  return encode(bytes)
 }
