@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import * as Macaroon from 'macaroon'
-import { Caveat, ErrInvalidCaveat, hasCaveat, verifyCaveats } from '../src'
+import { Caveat, ErrInvalidCaveat, getRawMacaroon, hasCaveat, verifyCaveats } from '../src'
 
 import { Satisfier } from '../src/types'
 
@@ -60,11 +60,7 @@ describe('Caveats', () => {
       })
       macaroon.addFirstPartyCaveat(caveat.encode())
 
-      const macBin = macaroon._exportBinaryV2()
-      if (macBin == null) {
-        return
-      }
-      const macb64 = Macaroon.bytesToBase64(macBin)
+      const macb64 = getRawMacaroon(macaroon)
       // check that it returns the value for the caveat we're checking for
       expect(hasCaveat(macb64, caveat)).to.equal(
         caveat.value && caveat.value.toString()
@@ -77,12 +73,7 @@ describe('Caveats', () => {
       // check that it will return the value of a newer caveat with the same condition
       const newerCaveat = new Caveat({ condition, value: value - 1 })
       macaroon.addFirstPartyCaveat(newerCaveat.encode())
-      const macBin2 = macaroon._exportBinaryV2()
-      if (macBin2 == null) {
-        return
-      }
-      const macb642 = Macaroon.bytesToBase64(macBin2)
-
+      const macb642 = getRawMacaroon(macaroon)
       expect(hasCaveat(macb642, newerCaveat)).to.equal(
         newerCaveat.value && newerCaveat.value.toString()
       )
@@ -96,11 +87,7 @@ describe('Caveats', () => {
         location: 'location',
       })
 
-      const macBin3 = macaroon._exportBinaryV2()
-      if (macBin3 == null) {
-        return
-      }
-      const macb643 = Macaroon.bytesToBase64(macBin3)
+      const macb643 = getRawMacaroon(macaroon)
 
       const test = (): boolean | ErrInvalidCaveat | string =>
         hasCaveat(macb643, 'condition:fail')

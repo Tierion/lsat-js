@@ -82,7 +82,7 @@ describe('satisfiers', () => {
     it('should fail to create satisfier on invalid target service', () => {
       const invalidTargetServices = [12, { foo: 'bar' }, ['a', 'b', 'c']]
       for (const target of invalidTargetServices) {
-        // @ts-expect-error
+        // @ts-expect-error this is a test that we expect to throw
         expect(() => createServicesSatisfier(target)).to.throw(
           InvalidServicesError
         )
@@ -147,11 +147,11 @@ describe('satisfiers', () => {
     it('should fail to create satisfier on invalid inputs', () => {
       const invalidInputs = [12, { foo: 'bar' }, ['a', 'b', 'c']]
       for (const target of invalidInputs) {
-        // @ts-expect-error
+        // @ts-expect-error test that expects to throw
         expect(() => createCapabilitiesSatisfier(target, 'test')).to.throw(
           InvalidCapabilitiesError
         )
-        // @ts-expect-error
+        // @ts-expect-error test that expects to throw
         expect(() => createCapabilitiesSatisfier('test', target)).to.throw(
           InvalidCapabilitiesError
         )
@@ -159,7 +159,6 @@ describe('satisfiers', () => {
     })
 
     it('should not allow any capabilities that were not previously allowed', () => {
-      // const invalidCaveat = Caveat.decode(`${SERVICES_CAVEAT_CONDITION}=baz:0`)
       const caveats = [secondCaveat, firstCaveat]
       expect(runTest(caveats, 'foo')).to.be.false
     })

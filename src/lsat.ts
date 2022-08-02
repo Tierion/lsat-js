@@ -4,7 +4,7 @@ const bufio = require('bufio')
 import crypto from 'crypto'
 import * as Macaroon from 'macaroon'
 
-import { Caveat, decodeIdentifierFromMacaroon, Identifier } from '.'
+import { Caveat, decodeIdentifierFromMacaroon, Identifier, getRawMacaroon } from '.'
 import { LsatOptions } from './types'
 import { isHex, getIdFromRequest, decode } from './helpers'
 
@@ -212,7 +212,7 @@ export class Lsat extends bufio.Struct {
 
     const mac = Macaroon.importMacaroon(this.baseMacaroon)
     mac.addFirstPartyCaveat(caveat.encode())
-    this.baseMacaroon = Macaroon.bytesToBase64(mac._exportBinaryV2())
+    this.baseMacaroon = getRawMacaroon(mac)
   }
 
   /**

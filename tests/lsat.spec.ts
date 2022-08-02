@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import * as Macaroon from 'macaroon'
 import {
   Caveat,
-  decodeIdentifierFromMacaroon,
+  getRawMacaroon,
   Lsat,
   parseChallengePart,
 } from '../src'
@@ -41,11 +41,8 @@ describe('LSAT Token', () => {
 
     const builder = getTestBuilder('secret')
     builder.addFirstPartyCaveat(caveat.encode())
-    const builderBin = builder._exportBinaryV2()
-    if (builderBin == null) {
-      return
-    }
-    const macb64 = Macaroon.bytesToBase64(builderBin)
+
+    const macb64 = getRawMacaroon(builder)
     macaroon = macb64
     challenge = `macaroon="${macb64}", invoice="${invoice.payreq}"`
   })
