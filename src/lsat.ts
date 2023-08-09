@@ -50,7 +50,7 @@ export class Lsat extends bufio.Struct {
   routingFeePaid: number | null
   invoiceAmount: number
 
-  static type = 'LSAT'
+  static type = 'L402'
 
   constructor(options: LsatOptions) {
     super(options)
@@ -242,7 +242,7 @@ export class Lsat extends bufio.Struct {
    * @returns {string}
    */
   toToken(): string {
-    return `LSAT ${this.baseMacaroon}:${this.paymentPreimage || ''}`
+    return `L402 ${this.baseMacaroon}:${this.paymentPreimage || ''}`
   }
 
   /**
@@ -257,7 +257,7 @@ export class Lsat extends bufio.Struct {
       `Can't create a challenge without a payment request/invoice`
     )
     const challenge = `macaroon="${this.baseMacaroon}", invoice="${this.invoice}"`
-    return `LSAT ${challenge}`
+    return `L402 ${challenge}`
   }
 
   toJSON(): LsatJson {
